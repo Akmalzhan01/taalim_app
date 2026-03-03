@@ -27,7 +27,7 @@
   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`: Rasm yuklash uchun.
 
 ### Admin (Static Site)
-- **Build Command**: `npm run build`
+- **Build Command**: `npm install && npm run build`
 - **Publish Directory**: `dist`
 - **Env Vars Required**:
   - `VITE_API_URL`: Backend API URL'i (masalan: `https://your-server.onrender.com/api`).
