@@ -18,8 +18,9 @@ const app = express();
 app.use(express.json());
 
 const allowedOrigins = [
-    'http://localhost:5173', // Local Dev
-    process.env.FRONTEND_URL, // Production Render URL
+    'http://localhost:5173',          // Local Dev
+    'https://taalim-app-1.onrender.com', // Admin panel domain
+    process.env.FRONTEND_URL,        // Production Render URL (ENV)
 ].filter(origin => origin); // Remove undefined if env not set
 
 app.use(cors({
