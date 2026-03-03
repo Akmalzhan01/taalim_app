@@ -1,0 +1,29 @@
+# O'quv Markazi / Do'kon Arxitekturasi Konteksti (Multi-Branch)
+
+Ushbu fayl loyihaning asosiy biznes mantiqi, arxitekturasi va kelishilgan qoidalarini saqlaydi. 
+
+## 1. Rollar (Roles) Dasturi
+Foydalanuvchilar (`User`) quyidagi rollarga ega bo'ladi:
+- `superadmin`: Dastur egasi, barcha filiallarni, hisobotlarni va tushumlarni ko'ra oladi. Barcha huquqlarga ega.
+- `manager`: Faqat o'ziga biriktirilgan filialning (Branch) xodimlari, kirimi, savdosi va hisobotlarini boshqaradi.
+- `cashier` (sotuvchi): Faqat o'z filialida savdo qiladi (Order) va chek chiqaradi, filial omborini ko'ra oladi.
+
+## 2. Filiallar (Branches) Dasturi
+- Dasturda bir nechta filiallar bo'ladi (`Branch` modeli).
+- Har bir filial o'z nomi, manzili kabi ma'lumotlarga ega.
+- Har bir `User`, `Order`, `Supply`, `Expenditure` qaysidir bitta aniq filialga tegishli bo'ladi (faqat superadmin'da filial majburiy bo'lmasligi mumkin, hamma narsani ko'radi).
+
+## 3. Ombor (Stock / Inventory) Mantiqi
+Bitta `Book` modeli saqlanib qoladi (ma'lumot takrorlanmasligi uchun). Lekin uning skladi filiallar bo'yicha ajratiladi:
+- Kitobning o'zida `countInStock` o'rniga, uning filiallar bo'yicha qoldig'ini saqlash uchun yangi Model (`BranchStock` - filial_id, book_id, countInStock) yaratiladi YOKI `Book` modeliga filiallarni bog'lovchi array (`branches: [{ branch: ObjectId, stock: Number }]`) qo'shiladi. (Tavsiya: Alohida `BranchStock` yoki array usuli, backend qadamida aniq qilinadi).
+
+## 4. Xavfsizlik va Kiritish (Security & UI RBAC)
+Har qanday API so'rovda foydalanuvchining roli tekshiriladi:
+- Qo'shish, o'chirish, tahrirlash - ruxsatnomalar asosida (Middleware).
+- O'zga filialning savdosini yoki omborini ko'rishga qat'iy cheklov o'rnatiladi.
+
+Frontend UI va Dinamik Ruxsatnomalar (Dynamic Permissions):
+- Har bir `User` ga qo'shimcha ravishda `permissions: [String]` massivi biriktiruvchi Dynamic Permissions kiritiladi.
+- Superadmin xodimni (masalan kassir yoki menejerni) yaratishda qaysi sahifalarga kirishi mumkinligini (masalan: `['dashboard', 'orders', 'pos']`) bittalab ko'rsatib yuboradi.
+- **Superadmin**: Barcha sahifalarga kirish avtomatik ruxsat etiladi.
+- **Qolganlar**: Faqatgina o'zining `permissions` massivida bor bo'limlarni yon panelda ko'radi va faqat o'sha URL larga kira oladi. Ruxsat berilmagan joyga kirsa `Dashboard` ga qaytariladi.
