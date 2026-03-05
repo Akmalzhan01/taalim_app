@@ -7,13 +7,14 @@ interface ExpenseModalProps {
     onClose: () => void;
     onSuccess: () => void;
     expenseToEdit?: any;
+    selectedBranch?: string;
 }
 
 const CATEGORIES = [
     'Аренда', 'Зарплата', 'Коммунальные', 'Маркетинг', 'Закупка', 'Логистика', 'Прочее'
 ];
 
-const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose, onSuccess, expenseToEdit }) => {
+const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose, onSuccess, expenseToEdit, selectedBranch }) => {
     const [formData, setFormData] = useState({
         title: '',
         amount: '',
@@ -55,11 +56,15 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose, onSuccess,
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            const payload = { ...formData };
+            if (selectedBranch) {
+                (payload as any).branch = selectedBranch;
+            }
             if (expenseToEdit) {
-                await axios.put(`${API_URL}/${expenseToEdit._id}`, formData, getAuthHeader());
+                await axios.put(`${API_URL}/${expenseToEdit._id}`, payload, getAuthHeader());
                 alert('Расход обновлен');
             } else {
-                await axios.post(API_URL, formData, getAuthHeader());
+                await axios.post(API_URL, payload, getAuthHeader());
                 alert('Расход добавлен');
             }
             onSuccess();

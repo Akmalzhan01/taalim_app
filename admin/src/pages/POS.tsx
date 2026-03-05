@@ -3,6 +3,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { getBooks } from '../features/books/bookSlice';
 import { createOrderAdmin, reset, getZReport } from '../features/orders/orderSlice';
 import { getSettings } from '../features/settings/settingSlice';
+import { getBranches } from '../features/branches/branchSlice';
+import BranchFilter from '../components/BranchFilter';
 
 import ExpenseModal from '../components/ExpenseModal';
 import { ShoppingCart, Search, Trash2, CreditCard, Banknote, Plus, Minus, CheckCircle, Printer, X, Clock, Pause, Edit2, TrendingDown } from 'lucide-react';
@@ -16,6 +18,7 @@ const POS = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { books } = useSelector((state: RootState) => state.books);
     const { isSuccess, isError, message, zReport } = useSelector((state: RootState) => state.orderList);
+    const { selectedBranch } = useSelector((state: RootState) => state.branches);
 
     const [cart, setCart] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -63,7 +66,7 @@ const POS = () => {
     });
 
     const handleOpenZReport = () => {
-        dispatch(getZReport());
+        dispatch(getZReport(selectedBranch));
         setShowZReportModal(true);
     };
 
@@ -74,11 +77,12 @@ const POS = () => {
 
 
     useEffect(() => {
-        dispatch(getBooks());
+        dispatch(getBranches());
+        dispatch(getBooks(selectedBranch));
         dispatch(getSettings());
         dispatch(reset()); // Reset state on mount to avoid stale alerts
         return () => { dispatch(reset()); };
-    }, [dispatch]);
+    }, [dispatch, selectedBranch]);
 
     useEffect(() => {
         localStorage.setItem('heldCarts', JSON.stringify(heldCarts));
@@ -124,7 +128,7 @@ const POS = () => {
         setReceiptData(null);
         setManualDiscount(0);
         setTempDiscount('');
-        dispatch(getBooks()); // Refresh stock
+        dispatch(getBooks(selectedBranch)); // Refresh stock
     };
 
     const handleHoldCart = () => {
@@ -305,7 +309,8 @@ const POS = () => {
             userId: selectedUser?._id,
             paymentMethod,
             totalPrice: total,
-            useCashback
+            useCashback,
+            branch: selectedBranch
         };
 
         dispatch(createOrderAdmin(orderData));
@@ -346,6 +351,9 @@ const POS = () => {
                                 <Plus size={20} className="group-hover:scale-110 transition-transform" />
                             </button>
                         </div>
+                        {/* Branch Filter */}
+                        <BranchFilter label="" />
+
                         {/* Stock Filter Pills */}
                         <div className="flex gap-2 bg-slate-100/50 p-1 rounded-xl">
                             <button
@@ -859,7 +867,8 @@ const POS = () => {
             <ExpenseModal
                 isOpen={showExpModal}
                 onClose={() => setShowExpModal(false)}
-                onSuccess={() => dispatch(getZReport())}
+                onSuccess={() => dispatch(getZReport(selectedBranch))}
+                selectedBranch={selectedBranch}
             />
         </div>
     );

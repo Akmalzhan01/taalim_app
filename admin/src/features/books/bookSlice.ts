@@ -11,9 +11,10 @@ const getToken = () => {
 };
 
 // Async Thunks
-export const getBooks = createAsyncThunk('books/getAll', async (_, thunkAPI) => {
+export const getBooks = createAsyncThunk('books/getAll', async (branchId: string | undefined, thunkAPI) => {
     try {
-        const response = await axios.get(BOOKS_URL);
+        const url = branchId ? `${BOOKS_URL}?branch=${branchId}` : BOOKS_URL;
+        const response = await axios.get(url);
         return response.data;
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message;

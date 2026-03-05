@@ -166,10 +166,13 @@ export const refundOrder = createAsyncThunk(
 // Get Z-Report
 export const getZReport = createAsyncThunk(
     'orders/zReport',
-    async (_, thunkAPI: any) => {
+    async (branchId: string | undefined, thunkAPI: any) => {
         try {
             const token = getToken(thunkAPI);
-            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const config = {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { branch: branchId }
+            };
             const response = await axios.get(`${ORDERS_URL}/z-report`, config);
             return response.data;
         } catch (error: any) {

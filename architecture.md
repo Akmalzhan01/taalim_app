@@ -29,5 +29,10 @@
 ### Admin (Static Site)
 - **Build Command**: `npm install && npm run build`
 - **Publish Directory**: `dist`
+- **SPA Routing (Refresh Fix)**:
+  - Render Dashboard -> Admin Service -> **Redirects/Rewrites**
+  - **Source**: `/*`
+  - **Destination**: `/index.html`
+  - **Action**: `Rewrite`
 - **Env Vars Required**:
   - `VITE_API_URL`: Backend API URL'i (masalan: `https://your-server.onrender.com/api`).

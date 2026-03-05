@@ -11,9 +11,15 @@ Foydalanuvchilar (`User`) quyidagi rollarga ega bo'ladi:
 ## 2. Filiallar (Branches) Dasturi
 - Dasturda bir nechta filiallar bo'ladi (`Branch` modeli).
 - Har bir filial o'z nomi, manzili kabi ma'lumotlarga ega.
-- Har bir `User`, `Order`, `Supply`, `Expenditure` qaysidir bitta aniq filialga tegishli bo'ladi (faqat superadmin'da filial majburiy bo'lmasligi mumkin, hamma narsani ko'radi).
+- Har bir `User`, `Book`, `Order`, `Supply`, `Expenditure` qaysidir bitta aniq filialga tegishli bo'ladi (faqat superadmin'da filial majburiy bo'lmasligi mumkin, hamma narsani ko'radi).
 
-## 3. Ombor (Stock / Inventory) Mantiqi
+## 3. Filiallar Bo'yicha Ma'lumotlarni Ajratish (Branch Isolation)
+Dasturning barcha bo'limlarida "Strict Branch Isolation" printsipi amal qiladi:
+- **Kitoblar (Books)**: Har bir kitob ma'lum bir filialga biriktirilgan. POS va Admin panelda faqat tanlangan filialga tegishli kitoblar ko'rsatiladi.
+- **Moliyaviy hisobotlar (Financials)**: Dashboard statistikalari, Z-Report (Kunlik hisobot) va Xarajatlar (Expenditures) faqat tanlangan filial bo'yicha hisoblanadi.
+- **Buyurtmalar (Orders)**: Har bir buyurtma filialga bog'langan va faqat o'sha filial menejeri tomonidan ko'riladi.
+
+## 4. Ombor (Stock / Inventory) Mantiqi
 Bitta `Book` modeli saqlanib qoladi (ma'lumot takrorlanmasligi uchun). Lekin uning skladi filiallar bo'yicha ajratiladi:
 - Kitobning o'zida `countInStock` o'rniga, uning filiallar bo'yicha qoldig'ini saqlash uchun yangi Model (`BranchStock` - filial_id, book_id, countInStock) yaratiladi YOKI `Book` modeliga filiallarni bog'lovchi array (`branches: [{ branch: ObjectId, stock: Number }]`) qo'shiladi. (Tavsiya: Alohida `BranchStock` yoki array usuli, backend qadamida aniq qilinadi).
 

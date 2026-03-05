@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getBooks, deleteBook, createBook, updateBook, reset } from '../features/books/bookSlice';
 import { getCategories } from '../features/categories/categorySlice';
-import { Plus, Trash2, Edit, X, BookOpen, Check, Search, Filter } from 'lucide-react';
+import { getBranches } from '../features/branches/branchSlice';
+import { Plus, Trash2, Edit, X, BookOpen, Check, Search, Filter, Store } from 'lucide-react';
 import type { AppDispatch, RootState } from '../app/store';
 import ImageWithFallback from '../components/ImageWithFallback';
+import BranchFilter from '../components/BranchFilter';
 
 const Books = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -12,6 +14,9 @@ const Books = () => {
         (state: RootState) => state.books
     );
     const { categories } = useSelector((state: RootState) => state.categories);
+    const { selectedBranch, branches } = useSelector((state: RootState) => state.branches);
+    const { user } = useSelector((state: RootState) => state.auth);
+    const isAdminUser = user?.role === 'superadmin' || user?.isAdmin === true || (user?.isAdmin as any) === 'true';
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -33,7 +38,8 @@ const Books = () => {
         costPrice: '',
         cashbackAmount: '',
         isBundle: false,
-        bundleItems: [] as { product: string, qty: number, title: string }[]
+        bundleItems: [] as { product: string, qty: number, title: string }[],
+        branch: '',
     });
     const [isEditMode, setIsEditMode] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -68,10 +74,11 @@ const Books = () => {
         if (isError) {
             alert(message);
         }
-        dispatch(getBooks());
+        dispatch(getBooks(selectedBranch));
         dispatch(getCategories());
+        dispatch(getBranches()); // Fetch branches for the UI
         return () => { dispatch(reset()); };
-    }, [isError, message, dispatch]);
+    }, [isError, message, dispatch, selectedBranch]);
 
     const handleDelete = (id: string) => {
         if (window.confirm('Are you sure you want to delete this book?')) {
@@ -99,7 +106,8 @@ const Books = () => {
             costPrice: '',
             cashbackAmount: '',
             isBundle: false,
-            bundleItems: []
+            bundleItems: [],
+            branch: selectedBranch || '',
         });
     };
 
@@ -128,7 +136,8 @@ const Books = () => {
                     product: bi.product?._id || bi.product,
                     qty: bi.qty,
                     title: bi.product?.title || 'Unknown Book'
-                })) || []
+                })) || [],
+                branch: book.branch?._id || book.branch || '',
             });
             setIsEditMode(true);
             setIsModalOpen(true);
@@ -177,7 +186,8 @@ const Books = () => {
             bundleItems: formData.isBundle ? formData.bundleItems.map(item => ({
                 product: item.product,
                 qty: item.qty
-            })) : []
+            })) : [],
+            branch: formData.branch || selectedBranch,
         };
 
         if (isEditMode) {
@@ -211,7 +221,8 @@ const Books = () => {
                     <p className="text-slate-500 text-sm mt-1">Управление ассортиментом библиотеки</p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row gap-3 items-center">
+                    <BranchFilter />
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <input
@@ -252,6 +263,7 @@ const Books = () => {
                             <tr>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Книга</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Автор</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Филиал</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider hidden">Цена</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Склад</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Продано</th>
@@ -293,6 +305,11 @@ const Books = () => {
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="text-sm font-medium text-slate-600">
                                             {book.author || 'Неизвестно'}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                                            {book.branch?.name || (branches as any[]).find((b: any) => b._id === (book.branch?._id || book.branch))?.name || '---'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap hidden"> {/* Hidden redundant price */}
@@ -404,6 +421,28 @@ const Books = () => {
                                         <input type="number" name="soldCount" value={formData.soldCount} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all font-medium text-slate-800 placeholder:text-slate-400 text-sm" placeholder="0" />
                                     </div>
                                 </div>
+
+                                {/* Branch Selection (only for superadmins/admins) */}
+                                {isAdminUser && branches && branches.length > 0 && (
+                                    <div className="space-y-1.5 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                                        <label className="block text-xs font-bold text-indigo-600 uppercase tracking-wide ml-1">Филиал</label>
+                                        <div className="relative mt-1">
+                                            <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400" size={16} />
+                                            <select
+                                                name="branch"
+                                                value={formData.branch}
+                                                onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+                                                className="w-full pl-10 pr-4 py-3 bg-white border border-indigo-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-slate-800 text-sm appearance-none cursor-pointer"
+                                                required
+                                            >
+                                                <option value="">Выберите филиал...</option>
+                                                {branches.map((b: any) => (
+                                                    <option key={b._id} value={b._id}>{b.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* New Fields: Size, Cover, Age */}
                                 <div className="grid grid-cols-3 gap-5">

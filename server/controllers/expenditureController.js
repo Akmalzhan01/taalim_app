@@ -53,7 +53,7 @@ const addExpenditure = asyncHandler(async (req, res) => {
         description,
         date: date || Date.now(),
         user: req.user._id,
-        branch: req.user.branch, // Added branch
+        branch: req.body.branch || req.user.branch, // Improved branch association
     });
 
     const populatedExp = await Expenditure.findById(expenditure._id).populate('user', 'name');

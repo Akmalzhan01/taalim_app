@@ -384,6 +384,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     // 1.2 Total Operating Expenditures
     const Expenditure = require('../models/Expenditure');
     const expenditureResult = await Expenditure.aggregate([
+        { $match: branchFilter }, // Added branchFilter
         { $group: { _id: null, totalExp: { $sum: '$amount' } } }
     ]);
     const totalExp = expenditureResult.length > 0 ? expenditureResult[0].totalExp : 0;
@@ -519,9 +520,21 @@ const getZReport = asyncHandler(async (req, res) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
+    // Branch Filter for Z-Report
+    let branchFilter = {};
+    if (req.user.role !== 'superadmin' && !req.user.isAdmin) {
+        if (req.user.branch) {
+            branchFilter = { branch: req.user.branch._id || req.user.branch };
+        }
+    } else if (req.query.branch) {
+        const mongoose = require('mongoose');
+        branchFilter = { branch: new mongoose.Types.ObjectId(req.query.branch) };
+    }
+
     const orders = await Order.find({
         createdAt: { $gte: startOfDay, $lte: endOfDay },
-        isPaid: true
+        isPaid: true,
+        ...branchFilter // Added branchFilter
     });
 
     let totalCash = 0;
@@ -547,7 +560,8 @@ const getZReport = asyncHandler(async (req, res) => {
 
     const Expenditure = require('../models/Expenditure');
     const expenditures = await Expenditure.find({
-        date: { $gte: startOfDay, $lte: endOfDay }
+        date: { $gte: startOfDay, $lte: endOfDay },
+        ...branchFilter // Added branchFilter
     });
 
     let totalExpenditures = 0;
@@ -557,7 +571,8 @@ const getZReport = asyncHandler(async (req, res) => {
 
     const Supply = require('../models/Supply');
     const todaySupplies = await Supply.find({
-        date: { $gte: startOfDay, $lte: endOfDay }
+        date: { $gte: startOfDay, $lte: endOfDay },
+        ...branchFilter // Added branchFilter
     });
 
     let totalSupplies = 0;

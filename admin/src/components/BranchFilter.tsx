@@ -13,8 +13,10 @@ const BranchFilter: React.FC<BranchFilterProps> = ({ label = "Филиал:" }) 
     const { user } = useSelector((state: RootState) => state.auth);
     const { branches, selectedBranch } = useSelector((state: RootState) => state.branches);
 
-    // Only show filter for superadmins
-    if (user?.role !== 'superadmin' && !user?.isAdmin) {
+    const isAdminUser = user?.role === 'superadmin' || user?.isAdmin === true || (user?.isAdmin as any) === 'true';
+
+    // Only show filter for superadmins/admins
+    if (!isAdminUser) {
         return null;
     }
 

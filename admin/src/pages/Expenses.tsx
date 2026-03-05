@@ -220,6 +220,7 @@ const Expenses = () => {
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={fetchExpenses}
                 expenseToEdit={editingExpense}
+                selectedBranch={selectedBranch}
             />
         </div>
     );

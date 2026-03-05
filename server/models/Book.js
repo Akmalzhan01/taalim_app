@@ -9,6 +9,7 @@ const commentSchema = mongoose.Schema({
 });
 
 const bookSchema = mongoose.Schema({
+    branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch', required: true },
     title: { type: String, required: true },
     author: { type: String, required: true },
     description: { type: String, required: true }, // Short description
