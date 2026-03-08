@@ -13,6 +13,7 @@ import POS from './pages/POS';
 import Banners from './pages/Banners';
 import Categories from './pages/Categories';
 import Users from './pages/Users';
+import Customers from './pages/Customers';
 import UserEdit from './pages/UserEdit';
 import Books from './pages/Books';
 import AuditLogs from './pages/AuditLogs';
@@ -24,6 +25,7 @@ import Expenses from './pages/Expenses';
 import Supplies from './pages/Supplies';
 import Branches from './pages/Branches';
 import AdminLayout from './pages/AdminLayout';
+import PosCustomerDisplay from './pages/PosCustomerDisplay';
 
 // Protected Route Component
 const PrivateRoute = ({ children }: { children: ReactElement }) => {
@@ -56,6 +58,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/pos-customer" element={<PosCustomerDisplay />} />
 
         {/* All Dashboard Routes wrapped in AdminLayout */}
         <Route
@@ -76,6 +79,12 @@ function App() {
           <Route path="users/:id/edit" element={
             <PermissionRoute moduleId="users">
               <UserEdit />
+            </PermissionRoute>
+          } />
+
+          <Route path="customers" element={
+            <PermissionRoute moduleId="customers">
+              <Customers />
             </PermissionRoute>
           } />
 

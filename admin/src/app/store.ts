@@ -16,6 +16,7 @@ import taskReducer from '../features/tasks/taskSlice';
 import kanbanColumnReducer from '../features/kanbanColumns/kanbanColumnSlice';
 import supplyReducer from '../features/supplies/supplySlice';
 import branchReducer from '../features/branches/branchSlice';
+import customerReducer from '../features/customers/customerSlice';
 
 export const store = configureStore({
     reducer: {
@@ -35,6 +36,7 @@ export const store = configureStore({
         kanbanColumns: kanbanColumnReducer,
         supplies: supplyReducer,
         branches: branchReducer,
+        customers: customerReducer,
     },
 });
 

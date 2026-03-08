@@ -215,7 +215,7 @@ const BarcodePrinter = () => {
                             <div key={`${book._id}-${index}`} className="barcode-item">
                                 <div className={`font-bold truncate w-full mb-1 px-2 print:text-black ${printerSize === 'Thermal' ? 'text-[10px]' : 'text-sm'}`}>{book.title}</div>
                                 <Barcode
-                                    value={book._id.slice(-12).toUpperCase()}
+                                    value={book.barcode ? book.barcode.toUpperCase() : book._id.slice(-12).toUpperCase()}
                                     format="CODE128"
                                     width={printerSize === 'Thermal' ? 1.2 : 1.8}
                                     height={printerSize === 'Thermal' ? 40 : 50}

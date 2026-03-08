@@ -1,5 +1,8 @@
 const asyncHandler = require('express-async-handler');
 const Order = require('../models/Order');
+const SupplyBatch = require('../models/SupplyBatch');
+const Book = require('../models/Book');
+const User = require('../models/User');
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -20,15 +23,37 @@ const addOrderItems = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('No order items');
     } else {
-        // Calculate Cashback to be earned
-        const Book = require('../models/Book');
+        // Calculate Cashback to be earned and FIFO Total Cost
         let earnedCashback = 0;
+        let totalCostPrice = 0;
 
-        // Verify stock and calculate cashback
+        // Verify stock, calculate cashback and apply FIFO
         for (const item of orderItems) {
             const book = await Book.findById(item.product);
             if (book) {
                 earnedCashback += (book.cashbackAmount || 0) * item.qty;
+
+                // FIFO Logic: Consume batches
+                const batches = await SupplyBatch.find({
+                    book: item.product,
+                    branch: req.user.branch,
+                    quantity: { $gt: 0 }
+                }).sort({ dateReceived: 1 });
+
+                let remainingQty = item.qty;
+                for (const batch of batches) {
+                    if (remainingQty <= 0) break;
+                    const consumed = Math.min(batch.quantity, remainingQty);
+                    batch.quantity -= consumed;
+                    remainingQty -= consumed;
+                    totalCostPrice += consumed * batch.costPrice;
+                    await batch.save();
+                }
+
+                if (remainingQty > 0) {
+                    // Fallback to book's current costPrice if batches are insufficient
+                    totalCostPrice += remainingQty * (book.costPrice || 0);
+                }
             }
         }
 
@@ -64,6 +89,7 @@ const addOrderItems = asyncHandler(async (req, res) => {
             taxPrice,
             shippingPrice,
             totalPrice: finalTotalPrice, // Update total price
+            totalCostPrice,
             usedCashback: usedCashbackAmount,
             earnedCashback: earnedCashback,
             branch: req.user.branch, // Added branch
@@ -122,10 +148,12 @@ const addOrderItems = asyncHandler(async (req, res) => {
 const addOrderAdmin = asyncHandler(async (req, res) => {
     const {
         orderItems,
-        userId, // Optional: if provided, link to user
+        userId, // Optional: if provided, link to app user
+        customerId, // [NEW] Link to CRM Customer
         paymentMethod,
         totalPrice,
-        useCashback
+        useCashback,
+        branch
     } = req.body;
 
     if (orderItems && orderItems.length === 0) {
@@ -135,23 +163,49 @@ const addOrderAdmin = asyncHandler(async (req, res) => {
 
     const Book = require('../models/Book');
     const User = require('../models/User');
+    const Customer = require('../models/Customer');
 
     let finalTotalPrice = totalPrice;
     let usedCashbackAmount = 0;
     let earnedCashback = 0;
+    let totalCostPrice = 0;
     let user = null;
 
-    // 1. Handle User & Cashback
+    // 1. Process FIFO and Calculate Cashback
+    for (const item of orderItems) {
+        const book = await Book.findById(item.product);
+        if (book) {
+            // FIFO Logic: Consume batches
+            const batches = await SupplyBatch.find({
+                book: item.product,
+                branch: branch || req.user.branch,
+                quantity: { $gt: 0 }
+            }).sort({ dateReceived: 1 });
+
+            let remainingQty = item.qty;
+            for (const batch of batches) {
+                if (remainingQty <= 0) break;
+                const consumed = Math.min(batch.quantity, remainingQty);
+                batch.quantity -= consumed;
+                remainingQty -= consumed;
+                totalCostPrice += consumed * batch.costPrice;
+                await batch.save();
+            }
+
+            if (remainingQty > 0) {
+                totalCostPrice += remainingQty * (book.costPrice || 0);
+            }
+
+            if (userId) {
+                earnedCashback += (book.cashbackAmount || 0) * item.qty;
+            }
+        }
+    }
+
+    // 2. Handle User & Cashback
     if (userId) {
         user = await User.findById(userId);
         if (user) {
-            // Calculate Earned Cashback
-            for (const item of orderItems) {
-                const book = await Book.findById(item.product);
-                if (book) {
-                    earnedCashback += (book.cashbackAmount || 0) * item.qty;
-                }
-            }
 
             // Handle Used Cashback
             if (useCashback && user.cashbackBalance > 0) {
@@ -212,15 +266,14 @@ const addOrderAdmin = asyncHandler(async (req, res) => {
 
     const order = new Order({
         items: orderItems,
-        user: userId || req.user._id, // If Guest, assign to Admin who processed it? Or better, `userId` if exists.
-        // If I assign to Admin, it messes up Admin's stats.
-        // I will temporarily assign to Admin if guest, but adding a note.
+        customer: customerId || null, // Link to CRM
         shippingAddress: { address: 'POS Sale', city: 'Store', postalCode: '0000', country: 'Local' },
         paymentMethod: paymentMethod || 'Cash',
         itemsPrice: totalPrice, // Simplified for POS
         taxPrice: 0,
         shippingPrice: 0,
         totalPrice: finalTotalPrice,
+        totalCostPrice,
         usedCashback: usedCashbackAmount,
         earnedCashback: earnedCashback,
         isPaid: true,
@@ -228,10 +281,20 @@ const addOrderAdmin = asyncHandler(async (req, res) => {
         isDelivered: true,
         deliveredAt: Date.now(),
         comment: userId ? 'POS Sale' : 'POS Sale (Guest)',
-        branch: req.user.branch, // Added branch parameter
+        branch: branch || req.user.branch, // Use frontend branch first, fallback to user branch
     });
 
     const createdOrder = await order.save();
+
+    // 4. Update Customer Stats if linked
+    if (customerId) {
+        await Customer.findByIdAndUpdate(customerId, {
+            $inc: {
+                totalPurchasedAmount: finalTotalPrice,
+                totalOrders: 1
+            }
+        });
+    }
 
     res.status(201).json(createdOrder);
 });
@@ -540,6 +603,7 @@ const getZReport = asyncHandler(async (req, res) => {
     let totalCash = 0;
     let totalCard = 0;
     let totalSales = 0;
+    let totalCOGS = 0;
     let totalRefunds = 0;
     let refundCount = 0;
     let orderCount = orders.length;
@@ -550,6 +614,7 @@ const getZReport = asyncHandler(async (req, res) => {
             refundCount++;
         } else {
             totalSales += order.totalPrice;
+            totalCOGS += (order.totalCostPrice || 0);
             if (order.paymentMethod === 'Card') {
                 totalCard += order.totalPrice;
             } else {
@@ -585,10 +650,11 @@ const getZReport = asyncHandler(async (req, res) => {
         totalSales,
         totalCash,
         totalCard,
+        totalCOGS,
         totalRefunds,
         totalExpenditures,
         totalSupplies,
-        netProfit: totalSales - totalExpenditures - totalSupplies,
+        netProfit: totalSales - totalCOGS - totalExpenditures,
         refundCount,
         orderCount: orderCount - refundCount,
     });

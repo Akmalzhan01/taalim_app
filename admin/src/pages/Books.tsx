@@ -33,6 +33,7 @@ const Books = () => {
         size: '',
         coverType: '',
         ageLimit: '',
+        barcode: '',
         countInStock: '0',
         minStockLimit: '5',
         costPrice: '',
@@ -101,6 +102,7 @@ const Books = () => {
             size: '',
             coverType: '',
             ageLimit: '',
+            barcode: '',
             countInStock: '0',
             minStockLimit: '5',
             costPrice: '',
@@ -127,6 +129,7 @@ const Books = () => {
                 size: book.size || '',
                 coverType: book.coverType || '',
                 ageLimit: book.ageLimit || '',
+                barcode: book.barcode || '',
                 countInStock: book.countInStock?.toString() || '0',
                 minStockLimit: book.minStockLimit?.toString() || '5',
                 costPrice: book.costPrice?.toString() || '',
@@ -178,6 +181,7 @@ const Books = () => {
             size: formData.size,
             coverType: formData.coverType,
             ageLimit: formData.ageLimit,
+            barcode: formData.barcode,
             countInStock: Number(formData.countInStock),
             minStockLimit: Number(formData.minStockLimit),
             costPrice: Number(formData.costPrice),
@@ -409,6 +413,11 @@ const Books = () => {
                                 <div className="space-y-1.5">
                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide ml-1">Автор</label>
                                     <input type="text" name="author" value={formData.author} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all font-medium text-slate-800 placeholder:text-slate-400 text-sm" placeholder="Например: Лев Толстой" />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide ml-1">Штрихкод (Barcode)</label>
+                                    <input type="text" name="barcode" value={formData.barcode} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all font-medium text-slate-800 placeholder:text-slate-400 text-sm" placeholder="Введите или сканируйте штрихкод" />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-5">

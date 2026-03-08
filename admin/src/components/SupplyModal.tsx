@@ -35,6 +35,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
         size: '',
         coverType: '',
         ageLimit: '',
+        barcode: '',
         minStockLimit: '5',
         cashbackAmount: '0'
     });
@@ -93,7 +94,8 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
             image: newBookData.image.trim() || 'https://via.placeholder.com/150',
             size: newBookData.size.trim() || 'A5',
             coverType: newBookData.coverType.trim() || 'Мягкий переплет',
-            ageLimit: newBookData.ageLimit.trim() || '0+'
+            ageLimit: newBookData.ageLimit.trim() || '0+',
+            barcode: newBookData.barcode.trim()
         };
 
         const resultAction = await dispatch(createBook(payload));
@@ -115,6 +117,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                 size: '',
                 coverType: '',
                 ageLimit: '',
+                barcode: '',
                 minStockLimit: '5',
                 cashbackAmount: '0'
             });
@@ -255,6 +258,13 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                                             className="w-full px-4 py-2 bg-white border border-emerald-100 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
                                         />
                                     </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Штрихкод (Barcode)"
+                                        value={newBookData.barcode}
+                                        onChange={(e) => setNewBookData({ ...newBookData, barcode: e.target.value })}
+                                        className="w-full px-4 py-2 bg-white border border-emerald-100 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                                    />
                                     <div className="grid grid-cols-2 gap-3">
                                         <input
                                             required

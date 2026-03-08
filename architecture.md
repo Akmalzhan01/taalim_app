@@ -13,6 +13,17 @@
 - [2026-03-03]: Render Deployment tayyorgarligi yakunlandi.
   - **Server (Backend)**: Web Service orqali deploy qilinadi. `FRONTEND_URL` va `MONGO_URI` env o'zgaruvchilari talab qilinadi.
   - **Admin (Frontend)**: Static Site orqali deploy qilinadi. `VITE_API_URL` env o'zgaruvchisi orqali backend bilan bog'lanadi. React Router uchun `_redirects` fayli qo'shildi.
+- [2026-03-05]: Local Development uchun API yo'naltirishlari `http://localhost:5000/api` ga o'zgartirildi (Admin paneldagi `constants.ts` va `.env` orqali). Mobile app esa Expo orqali local IP manzilni avtomatik aniqlaydigan qilib sozlandi (`mobile/services/api.ts`).
+- [2026-03-05]: `Book` modeliga qo'lda kiritiladigan `barcode` maydoni qo'shildi. Admin panel (Books va Supplies Quick Add) formalarida shtrixkodni qo'lda kiritish imkoniyati yaratildi.
+- [2026-03-05]: FIFO inventory system implemented. 
+  - `SupplyBatch` model tracks costs per shipment.
+  - `Order.totalCostPrice` stores COGS at order time.
+  - Reports updated to use stored cost for accurate profit calculation.
+- [2026-03-05]: POS Customer Display implemented using `BroadcastChannel API` for real-time window synchronization. New route `/pos-customer` added for client viewing.
+- [2026-03-06]: CRM (Customer Relationship Management) va Sodofat (Loyalty) tizimi joriy etildi.
+  - **Customer Model**: Mijozlar ismi, telefoni va umumiy xarid summasi bilan saqlanadi.
+  - **POS Integration**: Kassir endi mijozni telefon raqami orqali topishi yoki yangi mijoz qo'shishi mumkin. Mijozning umumiy xarid tarixi Kassada ko'rinadi, bu esa "hurmat" chegirmasini (manual discount) berishga asos bo'ladi.
+  - **Admin CRM Dashboard**: Mijozlar ro'yxati, qidiruvi va eng ko'p kitob olgan mijozlar reytingi (Top Customers) yaratildi.
 
 ## Deployment Details (Render)
 ### Backend (Web Service)

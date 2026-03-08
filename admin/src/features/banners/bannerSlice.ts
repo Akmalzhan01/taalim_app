@@ -13,7 +13,7 @@ const getToken = () => {
 // Async Thunks
 export const getBanners = createAsyncThunk('banners/getAll', async (_, thunkAPI) => {
     try {
-        const response = await axios.get(BANNERS_URL);
+        const response = await axios.get(`${BANNERS_URL}?all=true`);
         return response.data;
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message;
@@ -28,6 +28,20 @@ export const createBanner = createAsyncThunk('banners/create', async (bannerData
             headers: { Authorization: `Bearer ${token}` },
         };
         const response = await axios.post(BANNERS_URL, bannerData, config);
+        return response.data;
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message;
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+export const updateBanner = createAsyncThunk('banners/update', async ({ id, bannerData }: { id: string, bannerData: any }, thunkAPI) => {
+    try {
+        const token = getToken();
+        const config = {
+            headers: { Authorization: `Bearer ${token}` },
+        };
+        const response = await axios.put(BANNERS_URL + id, bannerData, config);
         return response.data;
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message;
@@ -89,6 +103,14 @@ const bannerSlice = createSlice({
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload as string;
+            })
+            .addCase(updateBanner.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                const index = state.banners.findIndex((b: any) => b._id === action.payload._id);
+                if (index !== -1) {
+                    state.banners[index] = action.payload as never;
+                }
             })
             .addCase(deleteBanner.fulfilled, (state, action) => {
                 state.isLoading = false;

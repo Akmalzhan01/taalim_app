@@ -45,18 +45,12 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     let booksSold = 0;
     let totalCOGS = 0;
 
-    // Need to fetch full books for COGS
-    const booksInDB = await Book.find().select('_id costPrice');
-    const costMap = {};
-    booksInDB.forEach(b => {
-        costMap[b._id.toString()] = b.costPrice || 0;
-    });
-
     orders.forEach(order => {
         if (order.isRefunded) {
             totalRefunds += order.totalPrice;
         } else {
             totalRevenue += order.totalPrice;
+            totalCOGS += (order.totalCostPrice || 0);
             totalCashbackIssued += (order.earnedCashback || 0);
             totalCashbackUsed += (order.usedCashback || 0);
 
@@ -69,8 +63,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
             order.items.forEach(item => {
                 booksSold += item.qty;
-                const cost = costMap[item.product.toString()] || 0;
-                totalCOGS += (cost * item.qty);
             });
         }
     });
@@ -84,8 +76,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const totalSupplies = supplies.reduce((acc, sup) => acc + sup.totalCost, 0);
 
     // Net Profit Calculation (Revenue - COGS - Expenditures - Supplies - Cashback Used - Refunds are already not in Revenue)
-    // Net Profit Calculation (Revenue - Expenditures - Supplies - Cashback Used - Refunds are already not in Revenue)
-    const netProfit = totalRevenue - totalExpenditures - totalSupplies - totalCashbackUsed;
+    // Business Net Profit: Revenue - COGS - Expenditures - CashbackUsed
+    const netProfit = totalRevenue - totalCOGS - totalExpenditures - totalCashbackUsed;
 
     res.json({
         totalRevenue,
@@ -206,12 +198,6 @@ const getSalesChartData = asyncHandler(async (req, res) => {
         ...branchFilter
     }).sort('createdAt');
 
-    const booksInDB = await Book.find().select('_id costPrice');
-    const costMap = {};
-    booksInDB.forEach(b => {
-        costMap[b._id.toString()] = b.costPrice || 0;
-    });
-
     const posSalesByDate = {};
     const mobileSalesByDate = {};
     const refundsByDate = {};
@@ -239,10 +225,10 @@ const getSalesChartData = asyncHandler(async (req, res) => {
             }
 
             cashbackUsedByDate[dateString] += (order.usedCashback || 0);
+            cogsByDate[dateString] += (order.totalCostPrice || 0);
 
             order.items.forEach(item => {
-                const cost = costMap[item.product.toString()] || 0;
-                cogsByDate[dateString] += (cost * item.qty);
+                // We still iterate to count books sold if needed, but COGS is taken from order
             });
         }
     });

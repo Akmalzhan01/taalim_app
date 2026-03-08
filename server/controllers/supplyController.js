@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Supply = require('../models/Supply');
 const Book = require('../models/Book');
+const SupplyBatch = require('../models/SupplyBatch');
 
 // @desc    Add new supply
 // @route   POST /api/supplies
@@ -22,12 +23,24 @@ const addSupply = asyncHandler(async (req, res) => {
 
         const createdSupply = await supply.save();
 
-        // Update stock for each product
+        // Update stock and create FIFO batches for each product
         for (const item of items) {
             const book = await Book.findById(item.product);
             if (book) {
+                // 1. Update general stock (cache)
                 book.countInStock += item.qty;
                 await book.save();
+
+                // 2. Create FIFO Batch
+                const batch = new SupplyBatch({
+                    book: item.product,
+                    branch: req.user.branch,
+                    costPrice: item.purchasePrice,
+                    quantity: item.qty,
+                    initialQuantity: item.qty,
+                    dateReceived: date || Date.now(),
+                });
+                await batch.save();
             }
         }
 

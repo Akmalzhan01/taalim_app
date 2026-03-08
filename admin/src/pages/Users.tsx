@@ -32,6 +32,7 @@ const Users = () => {
         { id: 'banners', name: 'Баннеры' },
         { id: 'categories', name: 'Категории' },
         { id: 'users', name: 'Пользователи' },
+        { id: 'customers', name: 'Mijozlar (CRM)' },
         { id: 'settings', name: 'Настройки' },
         { id: 'branches', name: 'Филиалы' },
         { id: 'supplies', name: 'Закупки' },

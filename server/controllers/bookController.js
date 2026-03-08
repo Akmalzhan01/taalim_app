@@ -123,7 +123,7 @@ const deleteBook = async (req, res) => {
 // @route   POST /api/books
 // @access  Private/Admin
 const createBook = async (req, res) => {
-    const { title, author, price, description, genres, image, summary, soldCount, isNew, size, coverType, ageLimit, countInStock, minStockLimit, costPrice, cashbackAmount, branch } = req.body;
+    const { title, author, price, description, genres, image, summary, soldCount, isNew, size, coverType, ageLimit, barcode, countInStock, minStockLimit, costPrice, cashbackAmount, branch } = req.body;
 
     // Use branch from body or fall back to user's branch
     const bookBranch = branch || (req.user && req.user.branch);
@@ -145,6 +145,7 @@ const createBook = async (req, res) => {
         size,
         coverType,
         ageLimit,
+        barcode,
         countInStock: countInStock || 0,
         minStockLimit: minStockLimit || 5,
         costPrice: costPrice || 0,
@@ -163,7 +164,7 @@ const createBook = async (req, res) => {
 // @route   PUT /api/books/:id
 // @access  Private/Admin
 const updateBook = async (req, res) => {
-    const { title, author, price, description, genres, image, summary, soldCount, isNew, size, coverType, ageLimit, countInStock, minStockLimit, costPrice, branch } = req.body;
+    const { title, author, price, description, genres, image, summary, soldCount, isNew, size, coverType, ageLimit, barcode, countInStock, minStockLimit, costPrice, branch } = req.body;
 
     const book = await Book.findById(req.params.id);
     console.log('updateBook called:', { bodyBranch: branch, userRole: req.user?.role, userIsAdmin: req.user?.isAdmin });
@@ -187,6 +188,7 @@ const updateBook = async (req, res) => {
         book.size = size || book.size;
         book.coverType = coverType || book.coverType;
         book.ageLimit = ageLimit || book.ageLimit;
+        book.barcode = barcode || book.barcode;
         book.countInStock = countInStock !== undefined ? countInStock : book.countInStock;
         book.minStockLimit = req.body.minStockLimit || book.minStockLimit;
         book.costPrice = req.body.costPrice || book.costPrice;

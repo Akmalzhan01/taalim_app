@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { getBanners, createBanner, deleteBanner, reset } from '../features/banners/bannerSlice';
-import { Plus, Trash2, X, Image as ImageIcon } from 'lucide-react';
+import { getBanners, createBanner, updateBanner, deleteBanner, reset } from '../features/banners/bannerSlice';
+import { Plus, Trash2, X, Image as ImageIcon, Power } from 'lucide-react';
 import type { AppDispatch, RootState } from '../app/store';
 import ImageWithFallback from '../components/ImageWithFallback';
 
@@ -32,6 +32,13 @@ const Banners = () => {
         if (window.confirm('Are you sure you want to delete this banner?')) {
             dispatch(deleteBanner(id));
         }
+    };
+
+    const handleToggleActive = (banner: any) => {
+        dispatch(updateBanner({
+            id: banner._id,
+            bannerData: { isActive: !banner.isActive }
+        }));
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,17 +110,26 @@ const Banners = () => {
                                 <h3 className="text-lg font-bold text-white leading-tight">{banner.title}</h3>
                             </div>
                         </div>
-                        <div className="p-4 flex justify-between items-center bg-white">
+                        <div className="p-4 flex justify-between items-center bg-white border-t border-slate-50">
                             <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
                                 <div className="w-4 h-4 rounded-full border border-slate-200" style={{ backgroundColor: banner.color }}></div>
                                 {banner.color}
                             </div>
-                            <button
-                                onClick={() => handleDelete(banner._id)}
-                                className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-colors"
-                            >
-                                <Trash2 size={18} />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => handleToggleActive(banner)}
+                                    title={banner.isActive ? "Deactivate" : "Activate"}
+                                    className={`p-2 rounded-lg transition-colors flex items-center gap-1 text-xs font-bold ${banner.isActive ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                                >
+                                    <Power size={14} /> {banner.isActive ? 'On' : 'Off'}
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(banner._id)}
+                                    className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-colors"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ))}

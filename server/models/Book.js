@@ -24,6 +24,7 @@ const bookSchema = mongoose.Schema({
     size: { type: String },
     coverType: { type: String },
     ageLimit: { type: String },
+    barcode: { type: String },
     branchStock: [
         {
             branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch', required: true },

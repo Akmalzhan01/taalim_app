@@ -57,6 +57,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/kanban-columns', kanbanColumnRoutes);
 app.use('/api/supplies', supplyRoutes);
 app.use('/api/branches', require('./routes/branchRoutes'));
+app.use('/api/customers', require('./routes/customerRoutes'));
 
 app.get('/', (req, res) => {
     res.send('API is running...');
