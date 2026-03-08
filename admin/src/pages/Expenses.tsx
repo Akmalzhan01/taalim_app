@@ -32,7 +32,8 @@ const Expenses = () => {
     const [filterCategory, setFilterCategory] = useState('');
     const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
 
-    const API_URL = 'http://localhost:5000/api/expenditures';
+    const BASE_URL = import.meta.env.VITE_API_URL || 'https://taalim-app.onrender.com/api';
+    const API_URL = `${BASE_URL}/expenditures`;
 
     const getAuthHeader = () => {
         if (user && user.token) {

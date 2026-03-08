@@ -82,7 +82,8 @@ const Blogs = () => {
                     },
                 };
 
-                const { data } = await axios.post('http://localhost:5000/api/upload', formData, config);
+                const BASE_URL = import.meta.env.VITE_API_URL || 'https://taalim-app.onrender.com/api';
+                const { data } = await axios.post(`${BASE_URL}/upload`, formData, config);
                 setImage(data.url);
                 setUploading(false);
             } catch (error) {

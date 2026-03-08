@@ -56,7 +56,8 @@ const Books = () => {
             formData.append('image', file);
             setUploading(true);
             try {
-                const response = await fetch('http://localhost:5000/api/upload', {
+                const BASE_URL = import.meta.env.VITE_API_URL || 'https://taalim-app.onrender.com/api';
+                const response = await fetch(`${BASE_URL}/upload`, {
                     method: 'POST',
                     body: formData,
                 });

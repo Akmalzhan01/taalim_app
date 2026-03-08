@@ -23,7 +23,8 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({ isOpen, onClose, onSuccess,
         date: new Date().toISOString().split('T')[0]
     });
 
-    const API_URL = 'http://localhost:5000/api/expenditures';
+    const BASE_URL = import.meta.env.VITE_API_URL || 'https://taalim-app.onrender.com/api';
+    const API_URL = `${BASE_URL}/expenditures`;
 
     useEffect(() => {
         if (expenseToEdit) {
