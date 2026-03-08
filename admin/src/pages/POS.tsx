@@ -14,7 +14,6 @@ import type { AppDispatch, RootState } from '../app/store';
 import ImageWithFallback from '../components/ImageWithFallback';
 import Receipt from '../components/Receipt';
 import { useReactToPrint } from 'react-to-print';
-import axios from 'axios';
 
 const POS = () => {
     const dispatch = useDispatch<AppDispatch>();
