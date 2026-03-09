@@ -12,6 +12,16 @@ const supplySchema = mongoose.Schema(
             ref: 'Branch',
             required: true,
         },
+        supplier: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Supplier',
+            required: false,
+        },
+        amountPaid: {
+            type: Number,
+            required: true,
+            default: 0,
+        },
         items: [
             {
                 product: {

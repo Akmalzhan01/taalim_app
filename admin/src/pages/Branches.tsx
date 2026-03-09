@@ -344,7 +344,7 @@ const Branches = () => {
                                         value={formData.phone}
                                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-slate-400 text-sm font-medium"
-                                        placeholder="+998 90 123 45 67"
+                                        placeholder="+996 90 123 45 67"
                                     />
                                 </div>
 

@@ -146,7 +146,7 @@ const BarcodePrinter = () => {
                                                 <div className="text-xs text-slate-500">ID: {book._id}</div>
                                             </div>
                                         </td>
-                                        <td className="p-4 font-medium text-slate-700">{book.price?.toLocaleString()} с.</td>
+                                        <td className="p-4 font-medium text-slate-700">{book.price?.toLocaleString()} сом</td>
                                         <td className="p-4">
                                             {book.countInStock > 0 ? (
                                                 <span className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg text-xs font-bold">{book.countInStock} шт</span>
@@ -224,7 +224,7 @@ const BarcodePrinter = () => {
                                     background="transparent"
                                     margin={0}
                                 />
-                                <div className={`font-black mt-1 print:text-black leading-none ${printerSize === 'Thermal' ? 'text-sm' : 'text-lg mt-2'}`}>{book.price.toLocaleString()} с.</div>
+                                <div className={`font-black mt-1 print:text-black leading-none ${printerSize === 'Thermal' ? 'text-sm' : 'text-lg mt-2'}`}>{book.price.toLocaleString()} сом</div>
                             </div>
                         ))}
                     </div>

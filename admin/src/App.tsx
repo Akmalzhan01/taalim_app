@@ -23,6 +23,7 @@ import Reports from './pages/Reports';
 import Kanban from './pages/Kanban';
 import Expenses from './pages/Expenses';
 import Supplies from './pages/Supplies';
+import Suppliers from './pages/Suppliers';
 import Branches from './pages/Branches';
 import AdminLayout from './pages/AdminLayout';
 import PosCustomerDisplay from './pages/PosCustomerDisplay';
@@ -85,6 +86,12 @@ function App() {
           <Route path="customers" element={
             <PermissionRoute moduleId="customers">
               <Customers />
+            </PermissionRoute>
+          } />
+
+          <Route path="suppliers" element={
+            <PermissionRoute moduleId="suppliers">
+              <Suppliers />
             </PermissionRoute>
           } />
 

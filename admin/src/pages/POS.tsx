@@ -366,7 +366,7 @@ const POS = () => {
                     <div className="flex flex-col sm:flex-row gap-3">
                         <div className="flex flex-1 gap-2">
                             <div className="relative flex-1 group">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                                <Search className="absolute left-3 top-4 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
                                 <input
                                     type="text"
                                     placeholder="Поиск товара..."
@@ -567,14 +567,14 @@ const POS = () => {
                         )}
                     </div>
 
-                    <div className="p-5 flex items-center justify-between group">
+                    <div className="p-2 flex items-center justify-between group">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
                                 <ShoppingCart size={20} />
                             </div>
                             <div>
                                 <h3 className="text-sm font-bold text-slate-800">Корзина</h3>
-                                <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">{cart.length} позиции</p>
+                                <p className="text-[11px] text-slate-500 font-medium">{cart.length} шт.</p>
                             </div>
                         </div>
                         {cart.length > 0 && (
@@ -622,14 +622,14 @@ const POS = () => {
 
                 {/* Summary Section */}
                 <div className="p-5 bg-white border-t border-slate-100 shadow-[0_-10px_30px_rgba(0,0,0,0.02)] space-y-3">
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                         <div className="flex justify-between text-xs font-medium text-slate-500">
                             <span>Промежуточный итог</span>
                             <span>{subtotal.toLocaleString()} с</span>
                         </div>
 
                         {/* Manual Discount Section */}
-                        <div className="flex items-center justify-between p-2.5 bg-indigo-50/50 border border-indigo-100/50 rounded-xl">
+                        <div className="flex items-center justify-between p-1 bg-indigo-50/50 border border-indigo-100/50 rounded-xl">
                             <div className="flex items-center gap-2">
                                 <TrendingDown size={14} className="text-indigo-500" />
                                 <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">Скидка:</span>
@@ -661,7 +661,7 @@ const POS = () => {
                     <div className="grid grid-cols-2 gap-2 mt-4">
                         <button
                             onClick={() => setPaymentMethod('Cash')}
-                            className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all ${paymentMethod === 'Cash'
+                            className={`flex flex-col items-center justify-center p-1 rounded-2xl border-2 transition-all ${paymentMethod === 'Cash'
                                 ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                                 : 'bg-slate-50 border-slate-100 text-slate-600 hover:border-indigo-200'}`}
                         >
@@ -670,7 +670,7 @@ const POS = () => {
                         </button>
                         <button
                             onClick={() => setPaymentMethod('Card')}
-                            className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all ${paymentMethod === 'Card'
+                            className={`flex flex-col items-center justify-center p-1 rounded-2xl border-2 transition-all ${paymentMethod === 'Card'
                                 ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                                 : 'bg-slate-50 border-slate-100 text-slate-600 hover:border-indigo-200'}`}
                         >
@@ -682,7 +682,7 @@ const POS = () => {
                     <button
                         onClick={handleCheckout}
                         disabled={cart.length === 0 || isOrderProcessing}
-                        className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-xl transition-all active:scale-[0.98] ${cart.length === 0 || isOrderProcessing
+                        className={`w-full py-3 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-xl transition-all active:scale-[0.98] ${cart.length === 0 || isOrderProcessing
                             ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                             : 'bg-slate-900 text-white hover:bg-indigo-600 shadow-indigo-500/20 active:translate-y-0.5'}`}
                     >
@@ -690,7 +690,7 @@ const POS = () => {
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                             <>
-                                <CheckCircle size={20} />
+                                <CheckCircle size={16} />
                                 <span>Оформить продажу</span>
                             </>
                         )}

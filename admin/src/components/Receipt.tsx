@@ -64,7 +64,7 @@ const Receipt = forwardRef<HTMLDivElement, ReceiptProps>(({ orderContext }, ref)
                         <tr key={index} className="border-b border-gray-200 last:border-0 align-top">
                             <td className="py-2 pr-2">{item.title}</td>
                             <td className="py-2 text-center">{item.qty}</td>
-                            <td className="py-2 text-right">{(item.price * item.qty).toLocaleString()} с.</td>
+                            <td className="py-2 text-right">{(item.price * item.qty).toLocaleString()} сом</td>
                         </tr>
                     ))}
                 </tbody>
@@ -75,19 +75,19 @@ const Receipt = forwardRef<HTMLDivElement, ReceiptProps>(({ orderContext }, ref)
             {/* Totals */}
             <div className={`${textSize} space-y-1 mb-4`}>
                 <div className="flex justify-between font-bold text-sm">
-                    <span>ИТОГОВАЯ СУММА:</span>
-                    <span>{orderContext.totalPrice.toLocaleString()} с.</span>
+                    <span>ИТОГОВАЯ сомМА:</span>
+                    <span>{orderContext.totalPrice.toLocaleString()} сом</span>
                 </div>
                 {config.showCashbackInfo && orderContext.usedCashback > 0 && (
                     <div className="flex justify-between text-gray-700">
                         <span>Списанный кэшбэк:</span>
-                        <span>-{orderContext.usedCashback.toLocaleString()} с.</span>
+                        <span>-{orderContext.usedCashback.toLocaleString()} сом</span>
                     </div>
                 )}
                 {config.showCashbackInfo && orderContext.earnedCashback > 0 && (
                     <div className="flex justify-between text-gray-700">
                         <span>Начисленный кэшбэк:</span>
-                        <span>+{orderContext.earnedCashback.toLocaleString()} с.</span>
+                        <span>+{orderContext.earnedCashback.toLocaleString()} сом</span>
                     </div>
                 )}
                 <div className="flex justify-between pt-1">

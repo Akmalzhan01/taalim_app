@@ -337,16 +337,16 @@ const Books = () => {
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex flex-col gap-1">
                                             <div className="text-xs font-medium text-slate-500">
-                                                Цена: <span className="text-slate-900 font-bold">{book.price} с.</span>
+                                                Цена: <span className="text-slate-900 font-bold">{book.price} сом</span>
                                             </div>
                                             <div className="text-xs font-medium text-emerald-600">
                                                 Прибыль: <span className="font-bold">
-                                                    {(book.price - (book.costPrice || 0) - (book.cashbackAmount || 0)).toLocaleString()} с.
+                                                    {(book.price - (book.costPrice || 0) - (book.cashbackAmount || 0)).toLocaleString()} сом
                                                 </span>
                                             </div>
                                             {book.cashbackAmount > 0 && (
                                                 <div className="text-xs font-medium text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded w-fit">
-                                                    Кешбек: {book.cashbackAmount} с.
+                                                    Кешбек: {book.cashbackAmount} сом
                                                 </div>
                                             )}
                                         </div>

@@ -171,7 +171,7 @@ const Reports = () => {
                         <div className="flex justify-between items-start relative z-10">
                             <div>
                                 <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Общая Выручка</p>
-                                <h3 className="text-3xl font-black text-slate-900 mt-2">{totalRevenue?.toLocaleString() || 0} с.</h3>
+                                <h3 className="text-3xl font-black text-slate-900 mt-2">{totalRevenue?.toLocaleString() || 0} сом</h3>
                             </div>
                             <div className="bg-emerald-50 text-emerald-600 p-3 rounded-xl">
                                 <TrendingUp size={24} />
@@ -180,11 +180,11 @@ const Reports = () => {
                         <div className="mt-4 flex flex-col gap-1.5 text-xs font-medium border-t border-slate-100 pt-3 relative z-10">
                             <div className="flex justify-between items-center bg-slate-50 px-2 py-1.5 rounded-lg">
                                 <span className="text-slate-500">POS (Магазин):</span>
-                                <span className="text-slate-900 font-bold">{posRevenue?.toLocaleString() || 0} с.</span>
+                                <span className="text-slate-900 font-bold">{posRevenue?.toLocaleString() || 0} сом</span>
                             </div>
                             <div className="flex justify-between items-center bg-slate-50 px-2 py-1.5 rounded-lg">
                                 <span className="text-slate-500">Mobile (Приложение):</span>
-                                <span className="text-slate-900 font-bold">{mobileRevenue?.toLocaleString() || 0} с.</span>
+                                <span className="text-slate-900 font-bold">{mobileRevenue?.toLocaleString() || 0} сом</span>
                             </div>
                         </div>
                     </div>
@@ -197,7 +197,7 @@ const Reports = () => {
                         <div className="flex justify-between items-start relative z-10">
                             <div>
                                 <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Чистая Прибыль</p>
-                                <h3 className="text-3xl font-black text-indigo-600 mt-2">{netProfit?.toLocaleString() || 0} с.</h3>
+                                <h3 className="text-3xl font-black text-indigo-600 mt-2">{netProfit?.toLocaleString() || 0} сом</h3>
                             </div>
                             <div className="bg-indigo-50 text-indigo-600 p-3 rounded-xl">
                                 <DollarSign size={24} />
@@ -206,19 +206,19 @@ const Reports = () => {
                         <div className="mt-4 flex flex-col gap-1 text-xs font-medium border-t border-slate-100 pt-3 relative z-10">
                             <div className="flex justify-between items-center">
                                 <span className="text-slate-500">Себестоимость (COGS):</span>
-                                <span className="text-rose-500">-{totalCOGS?.toLocaleString() || 0} с.</span>
+                                <span className="text-rose-500">-{totalCOGS?.toLocaleString() || 0} сом</span>
                             </div>
                             <div className="flex justify-between items-center bg-slate-50 px-2 py-1.5 rounded-lg">
                                 <span className="text-slate-500">Закупка (Supply):</span>
-                                <span className="text-rose-500">-{totalSupplies?.toLocaleString() || 0} с.</span>
+                                <span className="text-rose-500">-{totalSupplies?.toLocaleString() || 0} сом</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-slate-500">Расходы:</span>
-                                <span className="text-rose-500">-{totalExpenditures?.toLocaleString() || 0} с.</span>
+                                <span className="text-rose-500">-{totalExpenditures?.toLocaleString() || 0} сом</span>
                             </div>
                             <div className="flex justify-between items-center text-amber-600">
                                 <span className="">Возвраты (минус от выручки):</span>
-                                <span className="">-{totalRefunds?.toLocaleString() || 0} с.</span>
+                                <span className="">-{totalRefunds?.toLocaleString() || 0} сом</span>
                             </div>
                         </div>
                     </div>
@@ -250,14 +250,14 @@ const Reports = () => {
                         <div className="flex justify-between items-start relative z-10">
                             <div>
                                 <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Кешбек (Расход)</p>
-                                <h3 className="text-3xl font-black text-slate-900 mt-2">{totalCashbackUsed?.toLocaleString() || 0} с.</h3>
+                                <h3 className="text-3xl font-black text-slate-900 mt-2">{totalCashbackUsed?.toLocaleString() || 0} сом</h3>
                             </div>
                             <div className="bg-amber-50 text-amber-500 p-3 rounded-xl">
                                 <TrendingDown size={24} />
                             </div>
                         </div>
                         <div className="mt-4 flex flex-col gap-1 items-start text-sm font-medium text-amber-600 relative z-10">
-                            <span>Начислено (Потенциал): {totalCashbackIssued?.toLocaleString() || 0} с.</span>
+                            <span>Начислено (Потенциал): {totalCashbackIssued?.toLocaleString() || 0} сом</span>
                         </div>
                     </div>
                 </div>
@@ -348,28 +348,28 @@ const Reports = () => {
                                             {dayData.date}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-emerald-600 font-medium">
-                                            {dayData.POS_Продажи?.toLocaleString() || 0} с.
+                                            {dayData.POS_Продажи?.toLocaleString() || 0} сом
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-sky-600 font-medium">
-                                            {dayData.Mobile_Продажи?.toLocaleString() || 0} с.
+                                            {dayData.Mobile_Продажи?.toLocaleString() || 0} сом
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-900 font-bold bg-slate-50/50">
-                                            {dayData.Общие_Продажи?.toLocaleString() || 0} с.
+                                            {dayData.Общие_Продажи?.toLocaleString() || 0} сом
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-rose-500">
-                                            -{dayData.Себестоимость?.toLocaleString() || 0} с.
+                                            -{dayData.Себестоимость?.toLocaleString() || 0} сом
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-rose-500">
-                                            -{dayData.Закуп_Книг?.toLocaleString() || 0} с.
+                                            -{dayData.Закуп_Книг?.toLocaleString() || 0} сом
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-rose-500">
-                                            -{dayData.Расходы?.toLocaleString() || 0} с.
+                                            -{dayData.Расходы?.toLocaleString() || 0} сом
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-rose-500">
-                                            -{dayData.Возвраты?.toLocaleString() || 0} с.
+                                            -{dayData.Возвраты?.toLocaleString() || 0} сом
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-indigo-600 font-bold bg-indigo-50/30">
-                                            {dayData.Чистая_Прибыль?.toLocaleString() || 0} с.
+                                            {dayData.Чистая_Прибыль?.toLocaleString() || 0} сом
                                         </td>
                                     </tr>
                                 ))
@@ -408,7 +408,7 @@ const Reports = () => {
                                         {book.title}
                                     </p>
                                     <p className="text-xs font-medium text-slate-500 truncate">
-                                        {book.author || 'Неизвестный автор'} • {book.price} с.
+                                        {book.author || 'Неизвестный автор'} • {book.price} сом
                                     </p>
                                 </div>
                                 <div className="ml-4 text-right">
@@ -441,7 +441,7 @@ const Reports = () => {
                                         {book.title}
                                     </p>
                                     <p className="text-xs font-medium text-slate-500 truncate">
-                                        {book.author || 'Неизвестный автор'} • {book.price} с.
+                                        {book.author || 'Неизвестный автор'} • {book.price} сом
                                     </p>
                                 </div>
                                 <div className="ml-4 text-right">
@@ -515,7 +515,7 @@ const Reports = () => {
                                                         <div className="text-right">
                                                             <div className="text-xs text-slate-500 font-medium mb-0.5">Сумма чека:</div>
                                                             <div className="text-base font-black text-indigo-600 bg-indigo-50/50 px-2 rounded-md">
-                                                                {order.totalPrice?.toLocaleString()} с.
+                                                                {order.totalPrice?.toLocaleString()} сом
                                                             </div>
                                                         </div>
                                                         <div className={`p-1.5 rounded-full bg-slate-100 text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180 bg-indigo-100 text-indigo-600' : ''}`}>
@@ -547,13 +547,13 @@ const Reports = () => {
                                                                                 </div>
                                                                             </td>
                                                                             <td className="px-4 py-3 text-sm text-right text-slate-500 whitespace-nowrap">
-                                                                                {item.price?.toLocaleString()} с.
+                                                                                {item.price?.toLocaleString()} сом
                                                                             </td>
                                                                             <td className="px-4 py-3 text-sm text-right font-medium text-slate-700 whitespace-nowrap">
                                                                                 {item.qty} шт.
                                                                             </td>
                                                                             <td className="px-4 py-3 text-sm text-right font-bold text-slate-900 whitespace-nowrap">
-                                                                                {(item.price * item.qty).toLocaleString()} с.
+                                                                                {(item.price * item.qty).toLocaleString()} сом
                                                                             </td>
                                                                         </tr>
                                                                     ))}
@@ -563,7 +563,7 @@ const Reports = () => {
                                                                                 Скидка / Списание кэшбэка по чеку:
                                                                             </td>
                                                                             <td className="px-4 py-2 text-xs text-right font-bold text-rose-500 whitespace-nowrap">
-                                                                                -{Math.round(order.items?.reduce((acc: number, item: any) => acc + (item.price * item.qty), 0) - order.totalPrice).toLocaleString()} с.
+                                                                                -{Math.round(order.items?.reduce((acc: number, item: any) => acc + (item.price * item.qty), 0) - order.totalPrice).toLocaleString()} сом
                                                                             </td>
                                                                         </tr>
                                                                     )}

@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link, Outlet } from 'react-router-dom';
 import { logout, reset } from '../features/auth/authSlice';
 import type { AppDispatch, RootState } from '../app/store';
-import { LayoutDashboard, ShoppingCart, Users, BookOpen, LogOut, Grid, Quote, MessageSquare, Share2, ChartCandlestick, Menu, X, Settings, Barcode, PieChart, LayoutList, ReceiptText, Package, UserPlus } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, BookOpen, LogOut, Grid, Quote, MessageSquare, Share2, ChartCandlestick, Menu, X, Settings, Barcode, PieChart, LayoutList, ReceiptText, Package, UserPlus, PackageOpen } from 'lucide-react';
 
 const AdminLayout = () => {
     const navigate = useNavigate();
@@ -41,11 +41,12 @@ const AdminLayout = () => {
         { id: 'banners', label: 'Баннеры', path: '/dashboard/banners', icon: <LayoutDashboard size={20} /> },
         { id: 'categories', label: 'Категории', path: '/dashboard/categories', icon: <Grid size={20} /> },
         { id: 'users', label: 'Пользователи', path: '/dashboard/users', icon: <Users size={20} /> },
-        { id: 'customers', label: 'Mijozlar (CRM)', path: '/dashboard/customers', icon: <UserPlus size={20} />, className: 'text-indigo-600 bg-indigo-50/50 hover:bg-indigo-100 hover:text-indigo-800' },
+        { id: 'customers', label: 'Клиенты (CRM)', path: '/dashboard/customers', icon: <UserPlus size={20} />, className: 'text-indigo-600 bg-indigo-50/50 hover:bg-indigo-100 hover:text-indigo-800' },
         { id: 'quotes', label: 'Цитаты', path: '/dashboard/quotes', icon: <Quote size={20} /> },
         { id: 'blogs', label: 'Блог', path: '/dashboard/blogs', icon: <MessageSquare size={20} /> },
         { id: 'links', label: 'Соц. сети', path: '/dashboard/links', icon: <Share2 size={20} /> },
         { id: 'supplies', label: 'Закупка', path: '/dashboard/supplies', icon: <Package size={20} /> },
+        { id: 'suppliers', label: 'Поставщики (Долги)', path: '/dashboard/suppliers', icon: <PackageOpen size={20} />, className: 'text-orange-600 bg-orange-50/50 hover:bg-orange-100 hover:text-orange-800' },
         { id: 'reports', label: 'Отчеты', path: '/dashboard/reports', icon: <PieChart size={20} /> },
         { id: 'kanban', label: 'Канбан', path: '/dashboard/kanban', icon: <LayoutList size={20} /> },
         { id: 'expenses', label: 'Расходы', path: '/dashboard/expenses', icon: <ReceiptText size={20} />, className: 'text-rose-600 hover:bg-rose-50' },

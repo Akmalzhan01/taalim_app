@@ -24,6 +24,11 @@
   - **Customer Model**: Mijozlar ismi, telefoni va umumiy xarid summasi bilan saqlanadi.
   - **POS Integration**: Kassir endi mijozni telefon raqami orqali topishi yoki yangi mijoz qo'shishi mumkin. Mijozning umumiy xarid tarixi Kassada ko'rinadi, bu esa "hurmat" chegirmasini (manual discount) berishga asos bo'ladi.
   - **Admin CRM Dashboard**: Mijozlar ro'yxati, qidiruvi va eng ko'p kitob olgan mijozlar reytingi (Top Customers) yaratildi.
+- [2026-03-09]: B2B Ta'minotchilar bilan do'kon qarzi (Store Debt) va qisman to'lovlarni nazorat qilish tizimi joriy etildi.
+  - **Supplier Model**: Ta'minotchilar kiritgan tovar qiymati (totalSuppliedAmount) va ularga qilingan to'lovlar (totalPaidAmount) saqlanadi. 
+  - **Supply Checkout**: Yangi tovar qabul qilish (SupplyModal) oqimiga Ta'minotchini tanlash va "Boshlang'ich To'lov" (amountPaid)ni kiritish funksiyasi qo'shildi.
+  - **Suppliers Dashboard**: Adminlar barcha qarzlar (currentDebt) holatini kuzatib, bo'lib-bo'lib to'lovlarni tizimga kiritishlari uchun "Ta'minotchilar (Qarzlar)" sahifasi ishlab chiqildi.
+- [2026-03-09]: Tizim qismi Qirg'izistonga moslashtirildi. Barcha narx ko'rsatkichlari (sum → som) ga o'zgartirildi hamda standart telefon raqam codi (+998 → +996) qilib belgilandi. Barcha sahifalardagi statik nomlanishlar avtomatik tarzda node script yordamida yangilandi.
 
 ## Deployment Details (Render)
 ### Backend (Web Service)

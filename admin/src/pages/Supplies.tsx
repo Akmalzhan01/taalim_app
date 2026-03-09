@@ -34,7 +34,7 @@ const Supplies = () => {
     });
 
     const handleDelete = (id: string, cost: number) => {
-        if (window.confirm(`Вы уверены, что хотите удалить этот приход на сумму ${cost.toLocaleString()} сом? Это действие также спишет книги со склада.`)) {
+        if (window.confirm(`Вы уверены, что хотите удалить этот приход на сомму ${cost.toLocaleString()} сом? Это действие также спишет книги со склада.`)) {
             dispatch(deleteSupply(id) as any);
         }
     };
@@ -99,7 +99,7 @@ const Supplies = () => {
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Дата</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Сотрудник</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Книги</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Итоговая сумма</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Итоговая сомма</th>
                                 <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Действие</th>
                             </tr>
                         </thead>
@@ -186,8 +186,8 @@ const Supplies = () => {
                                             <p className="text-sm font-semibold text-slate-900">{supplyDetails.createdBy?.name || 'Неизвестно'}</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Итоговая сумма</p>
-                                            <p className="text-xl font-black text-indigo-700">{supplyDetails.totalCost.toLocaleString()} с.</p>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Итоговая сомма</p>
+                                            <p className="text-xl font-black text-indigo-700">{supplyDetails.totalCost.toLocaleString()} сом</p>
                                         </div>
                                     </div>
 
@@ -210,13 +210,13 @@ const Supplies = () => {
                                                                 {item.product?.title || 'Книга удалена'}
                                                             </td>
                                                             <td className="px-4 py-3 text-sm text-slate-500 text-right">
-                                                                {item.purchasePrice?.toLocaleString() || 0} с.
+                                                                {item.purchasePrice?.toLocaleString() || 0} сом
                                                             </td>
                                                             <td className="px-4 py-3 text-sm text-slate-700 font-bold text-right">
                                                                 x{item.qty}
                                                             </td>
                                                             <td className="px-4 py-3 text-sm text-indigo-600 font-bold text-right">
-                                                                {(item.purchasePrice * item.qty).toLocaleString()} с.
+                                                                {(item.purchasePrice * item.qty).toLocaleString()} сом
                                                             </td>
                                                         </tr>
                                                     ))}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { X, Search, Plus, Trash2, Package, Check, BookPlus, Loader2 } from 'lucide-react';
+import { X, Search, Plus, Trash2, Package, Check, BookPlus, Loader2, Truck, CreditCard } from 'lucide-react';
 import { getBooks, createBook } from '../features/books/bookSlice';
 import { getCategories } from '../features/categories/categorySlice';
+import { getSuppliers } from '../features/suppliers/supplierSlice';
 import { createSupply } from '../features/supplies/supplySlice';
 import type { AppDispatch, RootState } from '../app/store';
 
@@ -15,11 +16,14 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
     const dispatch = useDispatch<AppDispatch>();
     const { books } = useSelector((state: RootState) => state.books);
     const { categories } = useSelector((state: RootState) => state.categories);
+    const { suppliers } = useSelector((state: RootState) => state.suppliers);
     const { isLoading: isSupplyLoading } = useSelector((state: RootState) => state.supplies);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [basket, setBasket] = useState<any[]>([]);
     const [showQuickAdd, setShowQuickAdd] = useState(false);
+    const [selectedSupplier, setSelectedSupplier] = useState('');
+    const [amountPaid, setAmountPaid] = useState('');
 
     // Quick Add Form Data
     const [newBookData, setNewBookData] = useState({
@@ -44,6 +48,9 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
         if (isOpen) {
             dispatch(getBooks());
             dispatch(getCategories());
+            dispatch(getSuppliers());
+            setSelectedSupplier('');
+            setAmountPaid('');
         }
     }, [isOpen, dispatch]);
 
@@ -137,13 +144,17 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                 purchasePrice: item.purchasePrice
             })),
             totalCost,
-            date: new Date()
+            date: new Date(),
+            supplier: selectedSupplier || undefined,
+            amountPaid: Number(amountPaid) || 0
         };
 
         const resultAction = await dispatch(createSupply(supplyData));
         if (createSupply.fulfilled.match(resultAction)) {
             alert('Приход успешно завершен');
             setBasket([]);
+            setSelectedSupplier('');
+            setAmountPaid('');
             onClose();
         } else {
             alert('Произошла ошибка');
@@ -427,9 +438,39 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                             </div>
 
                             {basket.length > 0 && (
-                                <div className="p-4 bg-white border-t border-slate-100">
-                                    <div className="flex justify-between items-center mb-4 px-2">
-                                        <span className="text-sm font-medium text-slate-500">Общая сумма:</span>
+                                <div className="p-4 bg-white border-t border-slate-100 flex flex-col gap-4">
+                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                        <div className="mb-3">
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                                                <Truck size={14} className="text-indigo-500" /> Та'minotchi (Supplier)
+                                            </label>
+                                            <select
+                                                value={selectedSupplier}
+                                                onChange={(e) => setSelectedSupplier(e.target.value)}
+                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 font-medium"
+                                            >
+                                                <option value="">-- Tanlanmagan --</option>
+                                                {suppliers.map((sup: any) => (
+                                                    <option key={sup._id} value={sup._id}>{sup.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                                                <CreditCard size={14} className="text-emerald-500" /> Boshlang'ich To'lov
+                                            </label>
+                                            <input
+                                                type="number"
+                                                placeholder="0"
+                                                value={amountPaid}
+                                                onChange={(e) => setAmountPaid(e.target.value)}
+                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-emerald-700 focus:outline-none focus:border-emerald-500"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center px-2">
+                                        <span className="text-sm font-medium text-slate-500">Общая сомма:</span>
                                         <span className="text-lg font-black text-slate-900">
                                             {basket.reduce((acc, item) => acc + (item.purchasePrice * item.qty), 0).toLocaleString()} сом
                                         </span>

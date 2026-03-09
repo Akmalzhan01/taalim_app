@@ -7,7 +7,8 @@ const SupplyBatch = require('../models/SupplyBatch');
 // @route   POST /api/supplies
 // @access  Private/Admin
 const addSupply = asyncHandler(async (req, res) => {
-    const { items, totalCost, date } = req.body;
+    const { items, totalCost, date, supplier, amountPaid } = req.body;
+    const SupplierModel = require('../models/Supplier');
 
     if (items && items.length === 0) {
         res.status(400);
@@ -19,6 +20,8 @@ const addSupply = asyncHandler(async (req, res) => {
             items,
             totalCost,
             date: date || Date.now(),
+            supplier: supplier || null,
+            amountPaid: amountPaid || 0,
         });
 
         const createdSupply = await supply.save();
@@ -44,6 +47,16 @@ const addSupply = asyncHandler(async (req, res) => {
             }
         }
 
+        // Update Supplier Debt
+        if (supplier) {
+            const supplierDoc = await SupplierModel.findById(supplier);
+            if (supplierDoc) {
+                supplierDoc.totalSuppliedAmount += Number(totalCost);
+                supplierDoc.totalPaidAmount += Number(amountPaid || 0);
+                await supplierDoc.save();
+            }
+        }
+
         res.status(201).json(createdSupply);
     }
 });
@@ -65,6 +78,7 @@ const getSupplies = asyncHandler(async (req, res) => {
 
     const supplies = await Supply.find(query)
         .populate('createdBy', 'name email')
+        .populate('supplier', 'name phone')
         .populate('items.product', 'title')
         .sort({ createdAt: -1 });
     res.json(supplies);
