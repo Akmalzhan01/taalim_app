@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getDashboardStats, getTopBooks, getSalesChart, getSalesByDate, clearSelectedDateSales } from '../features/reports/reportSlice';
 import { getBranches } from '../features/branches/branchSlice';
 import { XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, BookOpen, ShoppingBag, Banknote, RefreshCcw, CalendarRange, ArrowUpRight, ArrowDownRight, X, Loader2, Store } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, BookOpen, ShoppingBag, Banknote, RefreshCcw, CalendarRange, ArrowUpRight, ArrowDownRight, X, Loader2, Store, Package, Wallet } from 'lucide-react';
 import type { AppDispatch, RootState } from '../app/store';
 
 const Reports = () => {
@@ -91,7 +91,10 @@ const Reports = () => {
         totalCashbackIssued,
         totalCashbackUsed,
         booksSold,
-        totalOrders
+        totalOrders,
+        totalInventoryCost,
+        totalInventoryRetail,
+        totalDebtToSuppliers
     } = dashboardStats || {};
 
     return (
@@ -162,16 +165,39 @@ const Reports = () => {
 
             {/* Top Stats Cards */}
             {dashboardStats && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Revenue Card */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
+
+                    {/* 1. Inventory Valuation */}
+                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <Package size={80} className="text-blue-600 transform translate-x-4 -translate-y-4" />
+                        </div>
+                        <div className="flex justify-between items-start relative z-10">
+                            <div>
+                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Общий остаток (Таннарх)</p>
+                                <h3 className="text-3xl font-black text-slate-900 mt-2">{totalInventoryCost?.toLocaleString() || 0} сом</h3>
+                            </div>
+                            <div className="bg-blue-50 text-blue-600 p-3 rounded-xl">
+                                <Package size={24} />
+                            </div>
+                        </div>
+                        <div className="mt-4 flex flex-col gap-1.5 text-xs font-medium border-t border-slate-100 pt-3 relative z-10">
+                            <div className="flex justify-between items-center text-sky-700 bg-sky-50 px-2 py-1.5 rounded-lg">
+                                <span>Сумма в ценах продажи:</span>
+                                <span className="font-bold text-sm tracking-wide">{totalInventoryRetail?.toLocaleString() || 0} сом</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 2. Total Revenue */}
                     <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                             <DollarSign size={80} className="text-emerald-600 transform translate-x-4 -translate-y-4" />
                         </div>
                         <div className="flex justify-between items-start relative z-10">
                             <div>
-                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Общая Выручка</p>
-                                <h3 className="text-3xl font-black text-slate-900 mt-2">{totalRevenue?.toLocaleString() || 0} сом</h3>
+                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Все продажи (Кирим)</p>
+                                <h3 className="text-3xl font-black text-emerald-600 mt-2">{totalRevenue?.toLocaleString() || 0} сом</h3>
                             </div>
                             <div className="bg-emerald-50 text-emerald-600 p-3 rounded-xl">
                                 <TrendingUp size={24} />
@@ -180,16 +206,16 @@ const Reports = () => {
                         <div className="mt-4 flex flex-col gap-1.5 text-xs font-medium border-t border-slate-100 pt-3 relative z-10">
                             <div className="flex justify-between items-center bg-slate-50 px-2 py-1.5 rounded-lg">
                                 <span className="text-slate-500">POS (Магазин):</span>
-                                <span className="text-slate-900 font-bold">{posRevenue?.toLocaleString() || 0} сом</span>
+                                <span className="text-emerald-700 font-bold">{posRevenue?.toLocaleString() || 0} сом</span>
                             </div>
                             <div className="flex justify-between items-center bg-slate-50 px-2 py-1.5 rounded-lg">
                                 <span className="text-slate-500">Mobile (Приложение):</span>
-                                <span className="text-slate-900 font-bold">{mobileRevenue?.toLocaleString() || 0} сом</span>
+                                <span className="text-emerald-700 font-bold">{mobileRevenue?.toLocaleString() || 0} сом</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Net Profit Card */}
+                    {/* 3. Net Profit */}
                     <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Banknote size={80} className="text-indigo-600 transform translate-x-4 -translate-y-4" />
@@ -203,61 +229,85 @@ const Reports = () => {
                                 <DollarSign size={24} />
                             </div>
                         </div>
-                        <div className="mt-4 flex flex-col gap-1 text-xs font-medium border-t border-slate-100 pt-3 relative z-10">
+                        <div className="mt-4 flex flex-col gap-1.5 text-xs font-medium border-t border-slate-100 pt-3 relative z-10">
                             <div className="flex justify-between items-center">
-                                <span className="text-slate-500">Себестоимость (COGS):</span>
+                                <span className="text-slate-500">Себестоимость проданного (COGS):</span>
                                 <span className="text-rose-500">-{totalCOGS?.toLocaleString() || 0} сом</span>
                             </div>
+                            <div className="flex gap-2 items-center text-slate-500 mt-1">
+                                <BookOpen size={14} /> <span>Продано {booksSold} книг в {totalOrders} заказах</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 4. Expenditures */}
+                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <TrendingDown size={80} className="text-rose-600 transform translate-x-4 -translate-y-4" />
+                        </div>
+                        <div className="flex justify-between items-start relative z-10">
+                            <div>
+                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Общие Расходы (Чиким)</p>
+                                <h3 className="text-3xl font-black text-rose-600 mt-2">{(totalExpenditures + totalSupplies)?.toLocaleString() || 0} сом</h3>
+                            </div>
+                            <div className="bg-rose-50 text-rose-600 p-3 rounded-xl">
+                                <TrendingDown size={24} />
+                            </div>
+                        </div>
+                        <div className="mt-4 flex flex-col gap-1.5 text-xs font-medium border-t border-slate-100 pt-3 relative z-10">
                             <div className="flex justify-between items-center bg-slate-50 px-2 py-1.5 rounded-lg">
-                                <span className="text-slate-500">Закупка (Supply):</span>
-                                <span className="text-rose-500">-{totalSupplies?.toLocaleString() || 0} сом</span>
+                                <span className="text-slate-500">Закупка книг (Supply):</span>
+                                <span className="text-rose-600 font-bold">{totalSupplies?.toLocaleString() || 0} сом</span>
                             </div>
+                            <div className="flex justify-between items-center bg-slate-50 px-2 py-1.5 rounded-lg">
+                                <span className="text-slate-500">Прочие расходы (Офис/ЗП):</span>
+                                <span className="text-rose-600 font-bold">{totalExpenditures?.toLocaleString() || 0} сом</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 5. Cashback */}
+                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <ShoppingBag size={80} className="text-amber-500 transform translate-x-4 -translate-y-4" />
+                        </div>
+                        <div className="flex justify-between items-start relative z-10">
+                            <div>
+                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Использованный Кешбэк</p>
+                                <h3 className="text-3xl font-black text-amber-600 mt-2">{totalCashbackUsed?.toLocaleString() || 0} сом</h3>
+                            </div>
+                            <div className="bg-amber-50 text-amber-600 p-3 rounded-xl">
+                                <ShoppingBag size={24} />
+                            </div>
+                        </div>
+                        <div className="mt-4 flex flex-col gap-1.5 text-xs font-medium border-t border-slate-100 pt-3 relative z-10">
                             <div className="flex justify-between items-center">
-                                <span className="text-slate-500">Расходы:</span>
-                                <span className="text-rose-500">-{totalExpenditures?.toLocaleString() || 0} сом</span>
+                                <span className="text-slate-500">Начислено потенциального кэшбэка:</span>
+                                <span className="text-amber-700 font-bold">{totalCashbackIssued?.toLocaleString() || 0} сом</span>
                             </div>
-                            <div className="flex justify-between items-center text-amber-600">
+                            <div className="flex justify-between items-center text-rose-500 mt-1">
                                 <span className="">Возвраты (минус от выручки):</span>
                                 <span className="">-{totalRefunds?.toLocaleString() || 0} сом</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Books Sold Card */}
-                    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
+                    {/* 6. Debts */}
+                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <BookOpen size={80} className="text-blue-600 transform translate-x-4 -translate-y-4" />
+                            <Wallet size={80} className="text-red-500 transform translate-x-4 -translate-y-4" />
                         </div>
                         <div className="flex justify-between items-start relative z-10">
                             <div>
-                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Книг продано</p>
-                                <h3 className="text-3xl font-black text-slate-900 mt-2">{booksSold} шт.</h3>
+                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Долги Магазина (Қарз)</p>
+                                <h3 className="text-3xl font-black text-red-600 mt-2">{totalDebtToSuppliers?.toLocaleString() || 0} сом</h3>
                             </div>
-                            <div className="bg-blue-50 text-blue-600 p-3 rounded-xl">
-                                <BookOpen size={24} />
-                            </div>
-                        </div>
-                        <div className="mt-4 flex items-center text-sm font-medium text-blue-600">
-                            <span>В {totalOrders} заказах</span>
-                        </div>
-                    </div>
-
-                    {/* Cashback Card */}
-                    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <ShoppingBag size={80} className="text-amber-500 transform translate-x-4 -translate-y-4" />
-                        </div>
-                        <div className="flex justify-between items-start relative z-10">
-                            <div>
-                                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Кешбек (Расход)</p>
-                                <h3 className="text-3xl font-black text-slate-900 mt-2">{totalCashbackUsed?.toLocaleString() || 0} сом</h3>
-                            </div>
-                            <div className="bg-amber-50 text-amber-500 p-3 rounded-xl">
-                                <TrendingDown size={24} />
+                            <div className="bg-red-50 text-red-600 p-3 rounded-xl">
+                                <Wallet size={24} />
                             </div>
                         </div>
-                        <div className="mt-4 flex flex-col gap-1 items-start text-sm font-medium text-amber-600 relative z-10">
-                            <span>Начислено (Потенциал): {totalCashbackIssued?.toLocaleString() || 0} сом</span>
+                        <div className="mt-4 flex flex-col gap-1.5 text-xs font-medium border-t border-slate-100 pt-3 relative z-10 text-slate-500">
+                            <p>Общая задолженность магазина перед поставщиками и издательствами.</p>
                         </div>
                     </div>
                 </div>

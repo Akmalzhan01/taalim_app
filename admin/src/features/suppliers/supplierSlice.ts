@@ -49,6 +49,17 @@ export const paySupplier = createAsyncThunk('suppliers/pay', async (data: { id: 
     }
 });
 
+// Delete supplier
+export const deleteSupplier = createAsyncThunk('suppliers/delete', async (id: string, thunkAPI) => {
+    try {
+        await supplierService.deleteSupplier(id);
+        return id;
+    } catch (error: any) {
+        const message = error.response?.data?.message || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
 export const supplierSlice = createSlice({
     name: 'supplier',
     initialState,
@@ -116,6 +127,19 @@ export const supplierSlice = createSlice({
                 }
             })
             .addCase(paySupplier.rejected, (state, action) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = action.payload as string;
+            })
+            .addCase(deleteSupplier.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(deleteSupplier.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.suppliers = state.suppliers.filter((supplier: any) => supplier._id !== action.payload) as never;
+            })
+            .addCase(deleteSupplier.rejected, (state, action) => {
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload as string;

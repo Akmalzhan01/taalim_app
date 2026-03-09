@@ -20,6 +20,13 @@ const supplierSchema = mongoose.Schema(
             required: true,
             default: 0,
         },
+        paymentHistory: [
+            {
+                amount: { type: Number, required: true },
+                comment: { type: String, default: '' },
+                date: { type: Date, default: Date.now }
+            }
+        ]
     },
     {
         timestamps: true,

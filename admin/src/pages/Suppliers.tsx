@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getSuppliers, createSupplier, paySupplier, reset } from '../features/suppliers/supplierSlice';
+import { getSuppliers, createSupplier, paySupplier, deleteSupplier, reset } from '../features/suppliers/supplierSlice';
 import type { AppDispatch, RootState } from '../app/store';
-import { CreditCard, Plus, Search, Truck, X } from 'lucide-react';
+import { CreditCard, Plus, Search, Truck, X, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Suppliers = () => {
@@ -16,10 +16,12 @@ const Suppliers = () => {
     // Add Form State
     const [newSupplierName, setNewSupplierName] = useState('');
     const [newSupplierPhone, setNewSupplierPhone] = useState('');
+    const [newSupplierDebt, setNewSupplierDebt] = useState('');
 
     // Pay Form State
     const [selectedSupplierForPay, setSelectedSupplierForPay] = useState<any>(null);
     const [paymentAmount, setPaymentAmount] = useState('');
+    const [paymentComment, setPaymentComment] = useState('');
 
     useEffect(() => {
         dispatch(getSuppliers());
@@ -34,9 +36,14 @@ const Suppliers = () => {
 
     const handleAddSupplier = (e: React.FormEvent) => {
         e.preventDefault();
-        dispatch(createSupplier({ name: newSupplierName, phone: newSupplierPhone }));
+        dispatch(createSupplier({
+            name: newSupplierName,
+            phone: newSupplierPhone,
+            initialDebt: newSupplierDebt ? parseFloat(newSupplierDebt) : 0
+        }));
         setNewSupplierName('');
         setNewSupplierPhone('');
+        setNewSupplierDebt('');
         setIsAddModalOpen(false);
         toast.success("Поставщик добавлен");
     };
@@ -45,11 +52,25 @@ const Suppliers = () => {
         e.preventDefault();
         if (!selectedSupplierForPay || !paymentAmount) return;
 
-        dispatch(paySupplier({ id: selectedSupplierForPay._id, paymentData: { amount: parseFloat(paymentAmount) } }));
+        dispatch(paySupplier({
+            id: selectedSupplierForPay._id,
+            paymentData: {
+                amount: parseFloat(paymentAmount),
+                comment: paymentComment
+            }
+        }));
         setPaymentAmount('');
+        setPaymentComment('');
         setSelectedSupplierForPay(null);
         setIsPayModalOpen(false);
         toast.success("Оплата принята");
+    };
+
+    const handleDeleteSupplier = (id: string, name: string) => {
+        if (window.confirm(`Вы уверены, что хотите удалить поставщика "${name}"? Это действие необратимо.`)) {
+            dispatch(deleteSupplier(id));
+            toast.success("Поставщик удален");
+        }
     };
 
     const filteredSuppliers = suppliers.filter((s: any) =>
@@ -159,15 +180,24 @@ const Suppliers = () => {
                                             </span>
                                         </td>
                                         <td className="p-4 text-right">
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedSupplierForPay(supplier);
-                                                    setIsPayModalOpen(true);
-                                                }}
-                                                className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-3 py-1.5 rounded-lg font-bold text-xs transition-colors"
-                                            >
-                                                Оплатить
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedSupplierForPay(supplier);
+                                                        setIsPayModalOpen(true);
+                                                    }}
+                                                    className="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white px-3 py-1.5 rounded-lg font-bold text-xs transition-colors"
+                                                >
+                                                    Оплатить
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteSupplier(supplier._id, supplier.name)}
+                                                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                                    title="Удалить поставщика"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
@@ -215,6 +245,18 @@ const Suppliers = () => {
                                     placeholder="+996 550 123 456"
                                 />
                             </div>
+                            <div>
+                                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Начальный долг (необязательно)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={newSupplierDebt}
+                                    onChange={(e) => setNewSupplierDebt(e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-medium"
+                                    placeholder="0"
+                                />
+                                <p className="text-xs text-slate-400 mt-1">Текущая задолженность перед поставщиком</p>
+                            </div>
                             <div className="pt-2">
                                 <button type="submit" className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors">
                                     Сохранить
@@ -256,6 +298,16 @@ const Suppliers = () => {
                                     onChange={(e) => setPaymentAmount(e.target.value)}
                                     className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 text-lg font-black text-slate-800"
                                     placeholder="0"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Комментарий (необязательно)</label>
+                                <input
+                                    type="text"
+                                    value={paymentComment}
+                                    onChange={(e) => setPaymentComment(e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 font-medium"
+                                    placeholder="Например: За партию книг от 10-го числа"
                                 />
                             </div>
                             <div className="pt-2">

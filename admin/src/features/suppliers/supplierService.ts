@@ -24,7 +24,6 @@ const createSupplier = async (supplierData: any) => {
     return response.data;
 };
 
-// Update supplier
 const updateSupplier = async (id: string, supplierData: any) => {
     const token = getToken();
     const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -40,11 +39,20 @@ const paySupplier = async (id: string, paymentData: any) => {
     return response.data;
 };
 
+// Delete supplier
+const deleteSupplier = async (id: string) => {
+    const token = getToken();
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+    const response = await axios.delete(SUPPLIERS_URL + id, config);
+    return response.data;
+};
+
 const supplierService = {
     getSuppliers,
     createSupplier,
     updateSupplier,
     paySupplier,
+    deleteSupplier,
 };
 
 export default supplierService;

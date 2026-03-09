@@ -25,10 +25,13 @@
   - **POS Integration**: Kassir endi mijozni telefon raqami orqali topishi yoki yangi mijoz qo'shishi mumkin. Mijozning umumiy xarid tarixi Kassada ko'rinadi, bu esa "hurmat" chegirmasini (manual discount) berishga asos bo'ladi.
   - **Admin CRM Dashboard**: Mijozlar ro'yxati, qidiruvi va eng ko'p kitob olgan mijozlar reytingi (Top Customers) yaratildi.
 - [2026-03-09]: B2B Ta'minotchilar bilan do'kon qarzi (Store Debt) va qisman to'lovlarni nazorat qilish tizimi joriy etildi.
-  - **Supplier Model**: Ta'minotchilar kiritgan tovar qiymati (totalSuppliedAmount) va ularga qilingan to'lovlar (totalPaidAmount) saqlanadi. 
+  - **Supplier Model**: Ta'minotchilar kiritgan tovar qiymati (totalSuppliedAmount) va ularga qilingan to'lovlar (totalPaidAmount) saqlanadi. Ayrim hollarda `initialDebt` (boshlang'ich qarz) va `paymentHistory` (izohli to'lovlar tarixi) qo'shildi. Supplier'ni o'chirib yuborish (delete) imkoniyati yaratildi.
   - **Supply Checkout**: Yangi tovar qabul qilish (SupplyModal) oqimiga Ta'minotchini tanlash va "Boshlang'ich To'lov" (amountPaid)ni kiritish funksiyasi qo'shildi.
-  - **Suppliers Dashboard**: Adminlar barcha qarzlar (currentDebt) holatini kuzatib, bo'lib-bo'lib to'lovlarni tizimga kiritishlari uchun "Ta'minotchilar (Qarzlar)" sahifasi ishlab chiqildi.
+  - **Suppliers Dashboard**: Adminlar barcha qarzlar (currentDebt) holatini kuzatib, bo'lib-bo'lib to'lovlarni tizimga kiritishlari uchun "Ta'minotchilar (Qarzlar)" sahifasi ishlab chiqildi. To'lov vaqtida izoh qoldirish imkoniyati ham berilgan.
 - [2026-03-09]: Tizim qismi Qirg'izistonga moslashtirildi. Barcha narx ko'rsatkichlari (sum → som) ga o'zgartirildi hamda standart telefon raqam codi (+998 → +996) qilib belgilandi. Barcha sahifalardagi statik nomlanishlar avtomatik tarzda node script yordamida yangilandi.
+- [2026-03-09]: Hisobotlar (Reports) bo'limi to'liq yangilandi. 
+  - Quyidagi kartochkalar orqali haqiqiy (real-time) holat ko'rsatiladi: `Umumiy ombor qoldig'i (Tannarxi reallikda va Sotuv potensiali)`, `Umumiy Kirimlar (Sotuvlar)`, `Toza Foyda (Daromad - Xarajat - Tannarx - Keshbek)`, `Umumiy Chiqimlar (Tovar Zaxirasi + Xarajatlar)`, `Keshbek xarajatlari`,  va `Do'kon Qarzi (B2B)`.
+  - Backend API (`getDashboardStats`) yuqoridagi yangi ko'rsatkichlarni (`totalInventoryCost`, `totalDebtToSuppliers`, qisman POS/Mobile) guruhlab bera boshladi.
 
 ## Deployment Details (Render)
 ### Backend (Web Service)

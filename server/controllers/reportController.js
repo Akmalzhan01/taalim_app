@@ -3,6 +3,7 @@ const Order = require('../models/Order');
 const Expenditure = require('../models/Expenditure');
 const Book = require('../models/Book');
 const Supply = require('../models/Supply');
+const Supplier = require('../models/Supplier');
 
 // @desc    Get dashboard statistics
 // @route   GET /api/reports/dashboard
@@ -79,6 +80,46 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     // Business Net Profit: Revenue - COGS - Expenditures - CashbackUsed
     const netProfit = totalRevenue - totalCOGS - totalExpenditures - totalCashbackUsed;
 
+    // 4. Total Inventory Valuation (Current Stock)
+    let inventoryFilter = {};
+    if (branchFilter.branch) {
+        // If a specific branch is selected, this is complex because branchStock is an array
+        // We'll calculate total inventory across all branches for now, or match specific branch stock
+        inventoryFilter = { 'branchStock.branch': branchFilter.branch };
+    }
+
+    const books = await Book.find({});
+    let totalInventoryCost = 0;
+    let totalInventoryRetail = 0;
+
+    books.forEach(book => {
+        let stockCount = 0;
+        if (branchFilter.branch) {
+            const bStock = book.branchStock.find(bs => bs.branch.toString() === branchFilter.branch.toString());
+            stockCount = bStock ? bStock.countInStock : 0;
+
+            // Fallback: If no branch stock found but the book belongs to this branch
+            if (stockCount === 0 && book.branch && book.branch.toString() === branchFilter.branch.toString()) {
+                stockCount = book.countInStock || 0;
+            }
+        } else {
+            // Sum across all branches
+            stockCount = book.branchStock.reduce((acc, bs) => acc + bs.countInStock, 0);
+            if (stockCount === 0 && book.countInStock > 0) {
+                // Legacy support if branchStock isn't fully migrated
+                stockCount = book.countInStock;
+            }
+        }
+
+        totalInventoryCost += stockCount * (book.costPrice || 0);
+        totalInventoryRetail += stockCount * (book.price || 0);
+    });
+
+    // 5. Total Debt To Suppliers
+    // We only calculate this globally or if it makes sense per branch. Currently Supplier doesn't have a branch field.
+    const suppliers = await Supplier.find({});
+    const totalDebtToSuppliers = suppliers.reduce((acc, sup) => acc + (sup.totalSuppliedAmount - sup.totalPaidAmount), 0);
+
     res.json({
         totalRevenue,
         posRevenue,
@@ -91,7 +132,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         totalCashbackIssued,
         totalCashbackUsed,
         booksSold,
-        totalOrders: orders.length
+        totalOrders: orders.length,
+        totalInventoryCost,
+        totalInventoryRetail,
+        totalDebtToSuppliers
     });
 });
 

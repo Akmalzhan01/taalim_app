@@ -5,6 +5,7 @@ const {
     createSupplier,
     updateSupplier,
     paySupplier,
+    deleteSupplier,
 } = require('../controllers/supplierController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -13,7 +14,8 @@ router.route('/')
     .post(protect, createSupplier);
 
 router.route('/:id')
-    .put(protect, updateSupplier);
+    .put(protect, updateSupplier)
+    .delete(protect, admin, deleteSupplier);
 
 router.route('/:id/pay')
     .post(protect, paySupplier);
