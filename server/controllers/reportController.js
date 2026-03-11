@@ -3,6 +3,7 @@ const Order = require('../models/Order');
 const Expenditure = require('../models/Expenditure');
 const Book = require('../models/Book');
 const Supply = require('../models/Supply');
+const SupplyBatch = require('../models/SupplyBatch');
 
 // @desc    Get dashboard statistics
 // @route   GET /api/reports/dashboard
@@ -88,7 +89,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     }
 
     const books = await Book.find({});
-    let totalInventoryCost = 0;
     let totalInventoryRetail = 0;
 
     books.forEach(book => {
@@ -110,9 +110,16 @@ const getDashboardStats = asyncHandler(async (req, res) => {
             }
         }
 
-        totalInventoryCost += stockCount * (book.costPrice || 0);
         totalInventoryRetail += stockCount * (book.price || 0);
     });
+
+    // Calculate actual cost from active SupplyBatches
+    const batchQuery = { quantity: { $gt: 0 } };
+    if (branchFilter.branch) {
+        batchQuery.branch = branchFilter.branch;
+    }
+    const activeBatches = await SupplyBatch.find(batchQuery);
+    const totalInventoryCost = activeBatches.reduce((acc, batch) => acc + (batch.quantity * (batch.costPrice || 0)), 0);
 
     // 5. Total Debt To Suppliers
     // Calculate total unpaid debt from the Supply model
