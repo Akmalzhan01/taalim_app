@@ -3,7 +3,6 @@ const Order = require('../models/Order');
 const Expenditure = require('../models/Expenditure');
 const Book = require('../models/Book');
 const Supply = require('../models/Supply');
-const Supplier = require('../models/Supplier');
 
 // @desc    Get dashboard statistics
 // @route   GET /api/reports/dashboard
@@ -116,9 +115,9 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     });
 
     // 5. Total Debt To Suppliers
-    // We only calculate this globally or if it makes sense per branch. Currently Supplier doesn't have a branch field.
-    const suppliers = await Supplier.find({});
-    const totalDebtToSuppliers = suppliers.reduce((acc, sup) => acc + (sup.totalSuppliedAmount - sup.totalPaidAmount), 0);
+    // Calculate total unpaid debt from the Supply model
+    const allSupplies = await Supply.find(branchFilter.branch ? { branch: branchFilter.branch } : {});
+    const totalDebtToSuppliers = allSupplies.reduce((acc, sup) => acc + (sup.debtAmount || 0), 0);
 
     res.json({
         totalRevenue,
