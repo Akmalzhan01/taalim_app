@@ -80,46 +80,20 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     // Business Net Profit: Revenue - COGS - Expenditures - CashbackUsed
     const netProfit = totalRevenue - totalCOGS - totalExpenditures - totalCashbackUsed;
 
-    // 4. Total Inventory Valuation (Current Stock)
-    let inventoryFilter = {};
-    if (branchFilter.branch) {
-        // If a specific branch is selected, this is complex because branchStock is an array
-        // We'll calculate total inventory across all branches for now, or match specific branch stock
-        inventoryFilter = { 'branchStock.branch': branchFilter.branch };
-    }
+    const activeBatches = await SupplyBatch.find(batchQuery).populate('book', 'price title');
 
-    const books = await Book.find({});
     let totalInventoryRetail = 0;
+    let totalInventoryCost = 0;
 
-    books.forEach(book => {
-        let stockCount = 0;
-        if (branchFilter.branch) {
-            const bStock = book.branchStock.find(bs => bs.branch.toString() === branchFilter.branch.toString());
-            stockCount = bStock ? bStock.countInStock : 0;
+    activeBatches.forEach(batch => {
+        totalInventoryCost += (batch.quantity * (batch.costPrice || 0));
 
-            // Fallback: If no branch stock found but the book belongs to this branch
-            if (stockCount === 0 && book.branch && book.branch.toString() === branchFilter.branch.toString()) {
-                stockCount = book.countInStock || 0;
-            }
-        } else {
-            // Sum across all branches
-            stockCount = book.branchStock.reduce((acc, bs) => acc + bs.countInStock, 0);
-            if (stockCount === 0 && book.countInStock > 0) {
-                // Legacy support if branchStock isn't fully migrated
-                stockCount = book.countInStock;
-            }
+        // Use populated book's selling price to match exactly the stock counted in batches
+        if (batch.book && batch.book.price) {
+            totalInventoryRetail += (batch.quantity * batch.book.price);
         }
-
-        totalInventoryRetail += stockCount * (book.price || 0);
     });
 
-    // Calculate actual cost from active SupplyBatches
-    const batchQuery = { quantity: { $gt: 0 } };
-    if (branchFilter.branch) {
-        batchQuery.branch = branchFilter.branch;
-    }
-    const activeBatches = await SupplyBatch.find(batchQuery);
-    const totalInventoryCost = activeBatches.reduce((acc, batch) => acc + (batch.quantity * (batch.costPrice || 0)), 0);
 
     // 5. Total Debt To Suppliers
     // Calculate total unpaid debt from the Supply model
