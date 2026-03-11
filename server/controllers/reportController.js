@@ -80,6 +80,10 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     // Business Net Profit: Revenue - COGS - Expenditures - CashbackUsed
     const netProfit = totalRevenue - totalCOGS - totalExpenditures - totalCashbackUsed;
 
+    const batchQuery = { quantity: { $gt: 0 } };
+    if (branchFilter.branch) {
+        batchQuery.branch = branchFilter.branch;
+    }
     const activeBatches = await SupplyBatch.find(batchQuery).populate('book', 'price title');
 
     let totalInventoryRetail = 0;
