@@ -96,13 +96,13 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
             branch: selectedBranch,
             price: Number(newBookData.price),
             cashbackAmount: Number(newBookData.cashbackAmount),
-            summary: newBookData.summary.trim() || 'Новая книга (добавлена быстро)',
-            description: newBookData.description.trim() || 'Новая книга добавлена через приход',
-            image: newBookData.image.trim() || 'https://via.placeholder.com/150',
-            size: newBookData.size.trim() || 'A5',
-            coverType: newBookData.coverType.trim() || 'Мягкий переплет',
-            ageLimit: newBookData.ageLimit.trim() || '0+',
-            barcode: newBookData.barcode.trim()
+            summary: newBookData.summary?.trim() || 'Новая книга (добавлена быстро)',
+            description: newBookData.description?.trim() || 'Новая книга добавлена через приход',
+            image: newBookData.image?.trim() || 'https://via.placeholder.com/150',
+            size: newBookData.size?.trim() || 'A5',
+            coverType: newBookData.coverType?.trim() || 'Мягкий переплет',
+            ageLimit: newBookData.ageLimit?.trim() || '0+',
+            barcode: newBookData.barcode?.trim()
         };
 
         const resultAction = await dispatch(createBook(payload));
@@ -178,7 +178,8 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                 },
             };
 
-            const { data } = await axios.post('/api/upload', formData, config);
+            const BASE_URL = import.meta.env.VITE_API_URL || 'https://taalim-app.onrender.com/api';
+            const { data } = await axios.post(`${BASE_URL}/upload`, formData, config);
             setNewBookData({ ...newBookData, image: data.url });
             toast.success('Изображение загружено');
         } catch (error: any) {
