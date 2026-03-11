@@ -7,20 +7,32 @@ const SupplyBatch = require('../models/SupplyBatch');
 // @route   POST /api/supplies
 // @access  Private/Admin
 const addSupply = asyncHandler(async (req, res) => {
-    const { items, totalCost, date, supplierName, supplierPhone, paymentStatus, paidAmount } = req.body;
+    const { items, totalCost, totalAmount, date, supplierName, supplierPhone, paymentStatus, paidAmount, branch } = req.body;
+
+    const actualTotalCost = totalCost || totalAmount || 0;
 
     if (items && items.length === 0) {
         res.status(400);
         throw new Error('No supply items');
     } else {
-        const debtAmount = paymentStatus === 'debt' ? Math.max(0, totalCost - Number(paidAmount || 0)) : 0;
-        const actualPaid = paymentStatus === 'debt' ? Number(paidAmount || 0) : totalCost;
+        const debtAmount = paymentStatus === 'debt' ? Math.max(0, actualTotalCost - Number(paidAmount || 0)) : 0;
+        const actualPaid = paymentStatus === 'debt' ? Number(paidAmount || 0) : actualTotalCost;
+
+        let supplyBranch = req.user.branch;
+        if (req.user.role === 'superadmin' || !supplyBranch) {
+            supplyBranch = branch;
+        }
+
+        if (!supplyBranch) {
+            res.status(400);
+            throw new Error('Branch is required');
+        }
 
         const supply = new Supply({
             createdBy: req.user._id,
-            branch: req.user.branch,
+            branch: supplyBranch,
             items,
-            totalCost,
+            totalCost: actualTotalCost,
             date: date || Date.now(),
             supplierName,
             supplierPhone,
@@ -42,7 +54,7 @@ const addSupply = asyncHandler(async (req, res) => {
                 // 2. Create FIFO Batch
                 const batch = new SupplyBatch({
                     book: item.product,
-                    branch: req.user.branch,
+                    branch: supplyBranch,
                     costPrice: item.purchasePrice,
                     quantity: item.qty,
                     initialQuantity: item.qty,
