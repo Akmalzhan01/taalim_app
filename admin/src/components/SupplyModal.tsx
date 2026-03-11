@@ -5,6 +5,8 @@ import { getBooks, createBook } from '../features/books/bookSlice';
 import { getCategories } from '../features/categories/categorySlice';
 import { createSupply } from '../features/supplies/supplySlice';
 import type { AppDispatch, RootState } from '../app/store';
+import { toast } from 'react-hot-toast';
+import axios from 'axios';
 
 interface SupplyModalProps {
     isOpen: boolean;
@@ -25,6 +27,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
     const [supplierPhone, setSupplierPhone] = useState('');
     const [paymentStatus, setPaymentStatus] = useState<'paid' | 'debt'>('paid');
     const [paidAmount, setPaidAmount] = useState('');
+    const [uploading, setUploading] = useState(false);
 
     // Quick Add Form Data
     const [newBookData, setNewBookData] = useState({
@@ -157,6 +160,32 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
             onClose();
         } else {
             alert('Произошла ошибка');
+        }
+    };
+
+    const uploadFileHandler = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+        setUploading(true);
+
+        try {
+            const config = {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            };
+
+            const { data } = await axios.post('/api/upload', formData, config);
+            setNewBookData({ ...newBookData, image: data.url });
+            toast.success('Изображение загружено');
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.response?.data?.message || 'Ошибка загрузки изображения');
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -327,13 +356,27 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                                             </div>
                                         </div>
 
-                                        <input
-                                            type="text"
-                                            placeholder="URL обложки (Image URL)"
-                                            value={newBookData.image}
-                                            onChange={(e) => setNewBookData({ ...newBookData, image: e.target.value })}
-                                            className="w-full px-4 py-2 bg-white border border-emerald-100 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
-                                        />
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="URL Обложки (необязательно)"
+                                                value={newBookData.image}
+                                                onChange={(e) => setNewBookData({ ...newBookData, image: e.target.value })}
+                                                className="flex-1 px-4 py-2 bg-white border border-emerald-100 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                                            />
+                                            <div className="relative">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={uploadFileHandler}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                    disabled={uploading}
+                                                />
+                                                <button type="button" className="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-2 rounded-xl font-medium text-sm transition-colors border border-emerald-200 h-full whitespace-nowrap">
+                                                    {uploading ? '...' : 'Загрузить'}
+                                                </button>
+                                            </div>
+                                        </div>
                                         <input
                                             type="text"
                                             placeholder="Краткое описание (Summary)"
@@ -350,7 +393,8 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                                     </div>
                                     <button
                                         type="submit"
-                                        className="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition shadow-lg shadow-emerald-200"
+                                        disabled={uploading}
+                                        className="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition shadow-lg shadow-emerald-200 disabled:opacity-50"
                                     >
                                         Создать и добавить книгу
                                     </button>
