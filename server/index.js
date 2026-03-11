@@ -10,6 +10,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const kanbanColumnRoutes = require('./routes/kanbanColumnRoutes');
 const supplyRoutes = require('./routes/supplyRoutes');
+const vendorRoutes = require('./routes/vendorRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -58,7 +59,7 @@ app.use('/api/kanban-columns', kanbanColumnRoutes);
 app.use('/api/supplies', supplyRoutes);
 app.use('/api/branches', require('./routes/branchRoutes'));
 app.use('/api/customers', require('./routes/customerRoutes'));
-app.use('/api/customers', require('./routes/customerRoutes'));
+app.use('/api/vendors', vendorRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');

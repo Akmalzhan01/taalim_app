@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link, Outlet } from 'react-router-dom';
 import { logout, reset } from '../features/auth/authSlice';
 import type { AppDispatch, RootState } from '../app/store';
-import { LayoutDashboard, ShoppingCart, Users, BookOpen, LogOut, Grid, Quote, MessageSquare, Share2, ChartCandlestick, Menu, X, Settings, Barcode, PieChart, LayoutList, ReceiptText, Package, UserPlus, Store } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, BookOpen, LogOut, Grid, Quote, MessageSquare, Share2, ChartCandlestick, Menu, X, Settings, Barcode, PieChart, LayoutList, ReceiptText, Package, UserPlus, Store, Truck } from 'lucide-react';
 
 const AdminLayout = () => {
     const navigate = useNavigate();
@@ -57,7 +57,8 @@ const AdminLayout = () => {
             label: 'Продажи & Закупки',
             items: [
                 { id: 'orders', label: 'Заказы', path: '/dashboard/orders', icon: <ShoppingCart size={18} /> },
-                { id: 'supplies', label: 'Закупка', path: '/dashboard/supplies', icon: <Package size={18} /> },
+                { id: 'supplies', label: 'Приход (Закупка)', path: '/dashboard/supplies', icon: <Package size={18} /> },
+                { id: 'vendors', label: 'Поставщики', path: '/dashboard/vendors', icon: <Truck size={18} /> },
                 { id: 'expenses', label: 'Расходы', path: '/dashboard/expenses', icon: <ReceiptText size={18} />, className: 'text-rose-600 hover:bg-rose-50' },
             ]
         },

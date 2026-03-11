@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Supply = require('../models/Supply');
 const Book = require('../models/Book');
 const SupplyBatch = require('../models/SupplyBatch');
+const Vendor = require('../models/Vendor');
 
 // @desc    Add new supply
 // @route   POST /api/supplies
@@ -52,6 +53,27 @@ const addSupply = asyncHandler(async (req, res) => {
         });
 
         const createdSupply = await supply.save();
+
+        // Update or create Vendor stats
+        if (supplierName) {
+            let vendor = await Vendor.findOne({ name: supplierName, branch: supplyBranch });
+            if (!vendor) {
+                vendor = new Vendor({
+                    name: supplierName,
+                    phone: supplierPhone || '',
+                    branch: supplyBranch,
+                    totalSuppliedAmount: actualTotalCost,
+                    totalSupplies: 1
+                });
+            } else {
+                vendor.totalSuppliedAmount += actualTotalCost;
+                vendor.totalSupplies += 1;
+                if (supplierPhone && !vendor.phone) {
+                    vendor.phone = supplierPhone;
+                }
+            }
+            await vendor.save();
+        }
 
         // Update stock and create FIFO batches for each product
         for (const item of items) {

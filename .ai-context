@@ -37,3 +37,8 @@ Frontend UI va Dinamik Ruxsatnomalar (Dynamic Permissions):
 - Superadmin xodimni (masalan kassir yoki menejerni) yaratishda qaysi sahifalarga kirishi mumkinligini (masalan: `['dashboard', 'orders', 'pos']`) bittalab ko'rsatib yuboradi.
 - **Superadmin**: Barcha sahifalarga kirish avtomatik ruxsat etiladi.
 - **Qolganlar**: Faqatgina o'zining `permissions` massivida bor bo'limlarni yon panelda ko'radi va faqat o'sha URL larga kira oladi. Ruxsat berilmagan joyga kirsa `Dashboard` ga qaytariladi.
+
+## 5. Yetkazib beruvchilar (Vendors / Suppliers) Mantiqi
+- Dasturda "Приход" bo'lganda, `Vendor` (Yetkazib beruvchi) obyekti filial bo'yicha shakllanadi yoki yuritiladi.
+- Dasturda filial menejeri faqat o'ziga taaluqli yetkazib beruvchilarni ko'radi ('Strict Branch Isolation').
+- `Supply` modelidagi kelib tushgan tovarlarning summasi `Vendor` modelining `totalSuppliedAmount` (Umumiy summa) va `totalSupplies` (Miqdor) statikalarida avtomatik hisoblab boriladi.

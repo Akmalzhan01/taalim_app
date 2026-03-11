@@ -4,6 +4,7 @@ import { X, Search, Plus, Trash2, Package, Check, BookPlus, Loader2, Truck, Cred
 import { getBooks, createBook } from '../features/books/bookSlice';
 import { getCategories } from '../features/categories/categorySlice';
 import { createSupply } from '../features/supplies/supplySlice';
+import { getVendors } from '../features/vendors/vendorSlice';
 import type { AppDispatch, RootState } from '../app/store';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
@@ -18,6 +19,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
     const { books } = useSelector((state: RootState) => state.books);
     const { categories } = useSelector((state: RootState) => state.categories);
     const { isLoading: isSupplyLoading } = useSelector((state: RootState) => state.supplies);
+    const { vendors } = useSelector((state: RootState) => state.vendors);
     const { selectedBranch } = useSelector((state: RootState) => state.branches);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -25,7 +27,12 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
     const [showQuickAdd, setShowQuickAdd] = useState(false);
     const [supplierName, setSupplierName] = useState('');
     const [supplierPhone, setSupplierPhone] = useState('');
+    const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState<'paid' | 'debt'>('paid');
+
+    const filteredSuppliers = supplierName
+        ? vendors.filter((v: any) => v.name.toLowerCase().includes(supplierName.toLowerCase()) || (v.phone && v.phone.includes(supplierName)))
+        : vendors.slice(0, 5); // Show top 5 if empty
     const [paidAmount, setPaidAmount] = useState('');
     const [uploading, setUploading] = useState(false);
 
@@ -47,14 +54,15 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
 
     useEffect(() => {
         if (isOpen) {
-            dispatch(getBooks());
+            dispatch(getBooks(selectedBranch));
             dispatch(getCategories());
+            dispatch(getVendors());
             setSupplierName('');
             setSupplierPhone('');
             setPaymentStatus('paid');
             setPaidAmount('');
         }
-    }, [isOpen, dispatch]);
+    }, [isOpen, dispatch, selectedBranch]);
 
     const filteredBooks = books.filter((book: any) =>
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -467,7 +475,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                                 <div className="p-4 bg-white border-t border-slate-100 flex flex-col gap-4">
                                     <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-3">
                                         <div className="grid grid-cols-2 gap-3">
-                                            <div>
+                                            <div className="relative">
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
                                                     <Truck size={14} className="text-indigo-500" /> Поставщик (Имя)
                                                 </label>
@@ -475,9 +483,32 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                                                     type="text"
                                                     placeholder="Ф.И.О"
                                                     value={supplierName}
-                                                    onChange={(e) => setSupplierName(e.target.value)}
+                                                    onChange={(e) => {
+                                                        setSupplierName(e.target.value);
+                                                        setShowSupplierDropdown(true);
+                                                    }}
+                                                    onFocus={() => setShowSupplierDropdown(true)}
+                                                    onBlur={() => setTimeout(() => setShowSupplierDropdown(false), 200)}
                                                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
                                                 />
+                                                {showSupplierDropdown && filteredSuppliers.length > 0 && (
+                                                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-100 shadow-xl rounded-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-48 overflow-y-auto">
+                                                        {filteredSuppliers.map((sup: any, idx: number) => (
+                                                            <div
+                                                                key={idx}
+                                                                className="px-4 py-2 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0"
+                                                                onClick={() => {
+                                                                    setSupplierName(sup.name);
+                                                                    setSupplierPhone(sup.phone || '');
+                                                                    setShowSupplierDropdown(false);
+                                                                }}
+                                                            >
+                                                                <p className="text-sm font-bold text-slate-900">{sup.name}</p>
+                                                                {sup.phone && <p className="text-xs text-slate-500">{sup.phone}</p>}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                             <div>
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
