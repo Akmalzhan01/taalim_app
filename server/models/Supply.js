@@ -65,6 +65,13 @@ const supplySchema = mongoose.Schema(
             required: true,
             default: Date.now,
         },
+        paymentHistory: [
+            {
+                amount: { type: Number, required: true },
+                date: { type: Date, required: true, default: Date.now },
+                handledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+            }
+        ]
     },
     {
         timestamps: true,

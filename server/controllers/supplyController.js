@@ -28,6 +28,15 @@ const addSupply = asyncHandler(async (req, res) => {
             throw new Error('Branch is required');
         }
 
+        let paymentHistory = [];
+        if (actualPaid > 0) {
+            paymentHistory.push({
+                amount: actualPaid,
+                date: date || Date.now(),
+                handledBy: req.user._id
+            });
+        }
+
         const supply = new Supply({
             createdBy: req.user._id,
             branch: supplyBranch,
@@ -39,6 +48,7 @@ const addSupply = asyncHandler(async (req, res) => {
             paymentStatus: paymentStatus || 'paid',
             paidAmount: actualPaid,
             debtAmount,
+            paymentHistory
         });
 
         const createdSupply = await supply.save();
@@ -139,6 +149,16 @@ const payDebt = asyncHandler(async (req, res) => {
         if (supply.debtAmount === 0) {
             supply.paymentStatus = 'paid';
         }
+
+        if (!supply.paymentHistory) {
+            supply.paymentHistory = [];
+        }
+
+        supply.paymentHistory.push({
+            amount: payment,
+            date: Date.now(),
+            handledBy: req.user._id
+        });
 
         const updatedSupply = await supply.save();
         res.json(updatedSupply);

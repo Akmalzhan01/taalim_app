@@ -279,6 +279,34 @@ const Supplies = () => {
                                             </table>
                                         </div>
                                     </div>
+
+                                    {supplyDetails.paymentHistory && supplyDetails.paymentHistory.length > 0 && (
+                                        <div>
+                                            <h4 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider mt-4">История оплат</h4>
+                                            <div className="border border-emerald-100 rounded-xl overflow-hidden">
+                                                <table className="min-w-full">
+                                                    <thead className="bg-emerald-50">
+                                                        <tr>
+                                                            <th className="px-4 py-3 text-left text-xs font-semibold text-emerald-600">Дата оплаты</th>
+                                                            <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-600">Сумма оплаты</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-emerald-50">
+                                                        {supplyDetails.paymentHistory.map((payment: any, idx: number) => (
+                                                            <tr key={idx} className="hover:bg-emerald-50/50">
+                                                                <td className="px-4 py-3 text-sm text-slate-700 font-medium">
+                                                                    {format(new Date(payment.date), 'dd.MM.yyyy HH:mm')}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-sm text-emerald-600 font-bold text-right">
+                                                                    {payment.amount.toLocaleString()} сом
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
