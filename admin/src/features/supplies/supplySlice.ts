@@ -96,6 +96,25 @@ export const getSupplyDetails = createAsyncThunk(
     }
 );
 
+export const payDebt = createAsyncThunk(
+    'supplies/payDebt',
+    async ({ id, amount }: { id: string, amount: number }, thunkAPI) => {
+        try {
+            const token = getToken(thunkAPI);
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            };
+            const response = await axios.post(`${SUPPLIES_URL}/${id}/pay`, { amount }, config);
+            return response.data;
+        } catch (error: any) {
+            const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+);
+
 interface SupplyState {
     supplies: any[];
     supplyDetails: any;
@@ -178,6 +197,22 @@ export const supplySlice = createSlice({
                 state.supplyDetails = action.payload;
             })
             .addCase(getSupplyDetails.rejected, (state, action) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = action.payload as string;
+            })
+            .addCase(payDebt.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(payDebt.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                const index = state.supplies.findIndex(s => s._id === action.payload._id);
+                if (index !== -1) {
+                    state.supplies[index] = action.payload;
+                }
+            })
+            .addCase(payDebt.rejected, (state, action) => {
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload as string;

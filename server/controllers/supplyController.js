@@ -7,21 +7,26 @@ const SupplyBatch = require('../models/SupplyBatch');
 // @route   POST /api/supplies
 // @access  Private/Admin
 const addSupply = asyncHandler(async (req, res) => {
-    const { items, totalCost, date, supplier, amountPaid } = req.body;
-    const SupplierModel = require('../models/Supplier');
+    const { items, totalCost, date, supplierName, supplierPhone, paymentStatus, paidAmount } = req.body;
 
     if (items && items.length === 0) {
         res.status(400);
         throw new Error('No supply items');
     } else {
+        const debtAmount = paymentStatus === 'debt' ? Math.max(0, totalCost - Number(paidAmount || 0)) : 0;
+        const actualPaid = paymentStatus === 'debt' ? Number(paidAmount || 0) : totalCost;
+
         const supply = new Supply({
             createdBy: req.user._id,
-            branch: req.user.branch, // Added branch
+            branch: req.user.branch,
             items,
             totalCost,
             date: date || Date.now(),
-            supplier: supplier || null,
-            amountPaid: amountPaid || 0,
+            supplierName,
+            supplierPhone,
+            paymentStatus: paymentStatus || 'paid',
+            paidAmount: actualPaid,
+            debtAmount,
         });
 
         const createdSupply = await supply.save();
@@ -47,16 +52,6 @@ const addSupply = asyncHandler(async (req, res) => {
             }
         }
 
-        // Update Supplier Debt
-        if (supplier) {
-            const supplierDoc = await SupplierModel.findById(supplier);
-            if (supplierDoc) {
-                supplierDoc.totalSuppliedAmount += Number(totalCost);
-                supplierDoc.totalPaidAmount += Number(amountPaid || 0);
-                await supplierDoc.save();
-            }
-        }
-
         res.status(201).json(createdSupply);
     }
 });
@@ -78,7 +73,6 @@ const getSupplies = asyncHandler(async (req, res) => {
 
     const supplies = await Supply.find(query)
         .populate('createdBy', 'name email')
-        .populate('supplier', 'name phone')
         .populate('items.product', 'title')
         .sort({ createdAt: -1 });
     res.json(supplies);
@@ -90,7 +84,7 @@ const getSupplies = asyncHandler(async (req, res) => {
 const getSupplyById = asyncHandler(async (req, res) => {
     const supply = await Supply.findById(req.params.id)
         .populate('createdBy', 'name email')
-        .populate('items.product', 'title price costPrice');
+        .populate('items.product', 'title price');
 
     if (supply) {
         // Branch Isolation Check
@@ -102,6 +96,40 @@ const getSupplyById = asyncHandler(async (req, res) => {
             }
         }
         res.json(supply);
+    } else {
+        res.status(404);
+        throw new Error('Supply not found');
+    }
+});
+
+// @desc    Pay debt for a supply
+// @route   POST /api/supplies/:id/pay
+// @access  Private/Admin
+const payDebt = asyncHandler(async (req, res) => {
+    const { amount } = req.body;
+    const supply = await Supply.findById(req.params.id);
+
+    if (supply) {
+        if (supply.paymentStatus !== 'debt' || supply.debtAmount <= 0) {
+            res.status(400);
+            throw new Error('No debt to pay for this supply');
+        }
+
+        const payment = Number(amount);
+        if (isNaN(payment) || payment <= 0) {
+            res.status(400);
+            throw new Error('Invalid payment amount');
+        }
+
+        supply.paidAmount += payment;
+        supply.debtAmount = Math.max(0, supply.debtAmount - payment);
+
+        if (supply.debtAmount === 0) {
+            supply.paymentStatus = 'paid';
+        }
+
+        const updatedSupply = await supply.save();
+        res.json(updatedSupply);
     } else {
         res.status(404);
         throw new Error('Supply not found');
@@ -146,5 +174,6 @@ module.exports = {
     addSupply,
     getSupplies,
     getSupplyById,
+    payDebt,
     deleteSupply,
 };

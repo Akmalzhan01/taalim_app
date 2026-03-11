@@ -34,9 +34,6 @@ const Books = () => {
         coverType: '',
         ageLimit: '',
         barcode: '',
-        countInStock: '0',
-        minStockLimit: '5',
-        costPrice: '',
         cashbackAmount: '',
         isBundle: false,
         bundleItems: [] as { product: string, qty: number, title: string }[],
@@ -104,9 +101,6 @@ const Books = () => {
             coverType: '',
             ageLimit: '',
             barcode: '',
-            countInStock: '0',
-            minStockLimit: '5',
-            costPrice: '',
             cashbackAmount: '',
             isBundle: false,
             bundleItems: [],
@@ -131,9 +125,6 @@ const Books = () => {
                 coverType: book.coverType || '',
                 ageLimit: book.ageLimit || '',
                 barcode: book.barcode || '',
-                countInStock: book.countInStock?.toString() || '0',
-                minStockLimit: book.minStockLimit?.toString() || '5',
-                costPrice: book.costPrice?.toString() || '',
                 cashbackAmount: book.cashbackAmount?.toString() || '',
                 isBundle: book.isBundle || false,
                 bundleItems: book.bundleItems?.map((bi: any) => ({
@@ -183,9 +174,6 @@ const Books = () => {
             coverType: formData.coverType,
             ageLimit: formData.ageLimit,
             barcode: formData.barcode,
-            countInStock: Number(formData.countInStock),
-            minStockLimit: Number(formData.minStockLimit),
-            costPrice: Number(formData.costPrice),
             cashbackAmount: Number(formData.cashbackAmount),
             isBundle: formData.isBundle,
             bundleItems: formData.isBundle ? formData.bundleItems.map(item => ({
@@ -269,11 +257,10 @@ const Books = () => {
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Книга</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Автор</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Филиал</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider hidden">Цена</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Склад</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Продано</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                                    Price / Profit / Cashback
+                                    Price / Cashback
                                 </th>
                                 <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Действия</th>
                             </tr>
@@ -336,13 +323,8 @@ const Books = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex flex-col gap-1">
-                                            <div className="text-xs font-medium text-slate-500">
-                                                Цена: <span className="text-slate-900 font-bold">{book.price} сом</span>
-                                            </div>
-                                            <div className="text-xs font-medium text-emerald-600">
-                                                Прибыль: <span className="font-bold">
-                                                    {(book.price - (book.costPrice || 0) - (book.cashbackAmount || 0)).toLocaleString()} сом
-                                                </span>
+                                            <div className="text-sm font-bold text-slate-900 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100 w-fit">
+                                                {book.price} сом
                                             </div>
                                             {book.cashbackAmount > 0 && (
                                                 <div className="text-xs font-medium text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded w-fit">
@@ -474,21 +456,7 @@ const Books = () => {
                                     </div>
                                 </div>
 
-                                {/* Inventory Fields */}
-                                <div className="grid grid-cols-2 gap-5 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-                                    <h4 className="col-span-2 text-sm font-bold text-yellow-800 uppercase mb-1">Складской учет & Финансы</h4>
-                                    <div className="space-y-1.5">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide ml-1">Себестоимость (сом)</label>
-                                        <input type="number" name="costPrice" value={formData.costPrice} onChange={handleInputChange} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all font-medium text-slate-800 placeholder:text-slate-400 text-sm" placeholder="0" />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide ml-1">Количество на складе</label>
-                                        <input type="number" name="countInStock" value={formData.countInStock} onChange={handleInputChange} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all font-medium text-slate-800 placeholder:text-slate-400 text-sm" placeholder="0" />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide ml-1">Мин. лимит (для уведомления)</label>
-                                        <input type="number" name="minStockLimit" value={formData.minStockLimit} onChange={handleInputChange} className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all font-medium text-slate-800 placeholder:text-slate-400 text-sm" placeholder="5" />
-                                    </div>
+                                <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
                                     <div className="space-y-1.5">
                                         <label className="block text-xs font-bold text-emerald-600 uppercase tracking-wide ml-1">Кешбек клиенту (сом)</label>
                                         <input type="number" name="cashbackAmount" value={formData.cashbackAmount} onChange={handleInputChange} className="w-full px-4 py-3 bg-white border border-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium text-slate-800 placeholder:text-slate-400 text-sm" placeholder="0" />

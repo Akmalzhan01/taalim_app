@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { X, Search, Plus, Trash2, Package, Check, BookPlus, Loader2, Truck, CreditCard } from 'lucide-react';
 import { getBooks, createBook } from '../features/books/bookSlice';
 import { getCategories } from '../features/categories/categorySlice';
-import { getSuppliers } from '../features/suppliers/supplierSlice';
 import { createSupply } from '../features/supplies/supplySlice';
 import type { AppDispatch, RootState } from '../app/store';
 
@@ -16,22 +15,22 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
     const dispatch = useDispatch<AppDispatch>();
     const { books } = useSelector((state: RootState) => state.books);
     const { categories } = useSelector((state: RootState) => state.categories);
-    const { suppliers } = useSelector((state: RootState) => state.suppliers);
     const { isLoading: isSupplyLoading } = useSelector((state: RootState) => state.supplies);
+    const { selectedBranch } = useSelector((state: RootState) => state.branches);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [basket, setBasket] = useState<any[]>([]);
     const [showQuickAdd, setShowQuickAdd] = useState(false);
-    const [selectedSupplier, setSelectedSupplier] = useState('');
-    const [amountPaid, setAmountPaid] = useState('');
+    const [supplierName, setSupplierName] = useState('');
+    const [supplierPhone, setSupplierPhone] = useState('');
+    const [paymentStatus, setPaymentStatus] = useState<'paid' | 'debt'>('paid');
+    const [paidAmount, setPaidAmount] = useState('');
 
     // Quick Add Form Data
     const [newBookData, setNewBookData] = useState({
         title: '',
         author: '',
         price: '',
-        costPrice: '',
-        countInStock: '0',
         genres: [] as string[],
         description: '',
         summary: '',
@@ -40,7 +39,6 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
         coverType: '',
         ageLimit: '',
         barcode: '',
-        minStockLimit: '5',
         cashbackAmount: '0'
     });
 
@@ -48,9 +46,10 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
         if (isOpen) {
             dispatch(getBooks());
             dispatch(getCategories());
-            dispatch(getSuppliers());
-            setSelectedSupplier('');
-            setAmountPaid('');
+            setSupplierName('');
+            setSupplierPhone('');
+            setPaymentStatus('paid');
+            setPaidAmount('');
         }
     }, [isOpen, dispatch]);
 
@@ -91,10 +90,8 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
 
         const payload = {
             ...newBookData,
+            branch: selectedBranch,
             price: Number(newBookData.price),
-            costPrice: Number(newBookData.costPrice),
-            countInStock: Number(newBookData.countInStock),
-            minStockLimit: Number(newBookData.minStockLimit),
             cashbackAmount: Number(newBookData.cashbackAmount),
             summary: newBookData.summary.trim() || 'Новая книга (добавлена быстро)',
             description: newBookData.description.trim() || 'Новая книга добавлена через приход',
@@ -115,8 +112,6 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                 title: '',
                 author: '',
                 price: '',
-                costPrice: '',
-                countInStock: '0',
                 genres: [],
                 description: '',
                 summary: '',
@@ -125,7 +120,6 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                 coverType: '',
                 ageLimit: '',
                 barcode: '',
-                minStockLimit: '5',
                 cashbackAmount: '0'
             });
         } else {
@@ -136,25 +130,30 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
     const handleSubmitSupply = async () => {
         if (basket.length === 0) return;
 
-        const totalCost = basket.reduce((acc, item) => acc + (item.purchasePrice * item.qty), 0);
+        const totalAmount = basket.reduce((acc, item) => acc + (item.purchasePrice * item.qty), 0);
         const supplyData = {
             items: basket.map(item => ({
                 product: item.product,
                 qty: item.qty,
                 purchasePrice: item.purchasePrice
             })),
-            totalCost,
+            totalAmount,
             date: new Date(),
-            supplier: selectedSupplier || undefined,
-            amountPaid: Number(amountPaid) || 0
+            supplierName,
+            supplierPhone,
+            paymentStatus,
+            branch: selectedBranch,
+            paidAmount: Number(paidAmount) || 0
         };
 
         const resultAction = await dispatch(createSupply(supplyData));
         if (createSupply.fulfilled.match(resultAction)) {
             alert('Приход успешно завершен');
             setBasket([]);
-            setSelectedSupplier('');
-            setAmountPaid('');
+            setSupplierName('');
+            setSupplierPhone('');
+            setPaymentStatus('paid');
+            setPaidAmount('');
             onClose();
         } else {
             alert('Произошла ошибка');
@@ -277,14 +276,6 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                                         className="w-full px-4 py-2 bg-white border border-emerald-100 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
                                     />
                                     <div className="grid grid-cols-2 gap-3">
-                                        <input
-                                            required
-                                            type="number"
-                                            placeholder="Цена прихода (Cost)"
-                                            value={newBookData.costPrice}
-                                            onChange={(e) => setNewBookData({ ...newBookData, costPrice: e.target.value })}
-                                            className="w-full px-4 py-2 bg-white border border-emerald-100 rounded-xl text-sm focus:outline-none focus:border-emerald-500 font-bold text-emerald-700"
-                                        />
                                         <select
                                             className="w-full px-4 py-2 bg-white border border-emerald-100 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
                                             onChange={(e) => setNewBookData({ ...newBookData, genres: [e.target.value] })}
@@ -323,17 +314,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                                             />
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="text-[10px] text-emerald-600 font-semibold uppercase mb-1 block">Мин. лимит (остаток)</label>
-                                                <input
-                                                    type="number"
-                                                    placeholder="Мин. лимит"
-                                                    value={newBookData.minStockLimit}
-                                                    onChange={(e) => setNewBookData({ ...newBookData, minStockLimit: e.target.value })}
-                                                    className="w-full px-4 py-2 bg-white border border-emerald-100 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
-                                                />
-                                            </div>
+                                        <div className="grid grid-cols-1">
                                             <div>
                                                 <label className="text-[10px] text-emerald-600 font-semibold uppercase mb-1 block">Кешбэк клиенту (сум)</label>
                                                 <input
@@ -439,33 +420,60 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
 
                             {basket.length > 0 && (
                                 <div className="p-4 bg-white border-t border-slate-100 flex flex-col gap-4">
-                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                        <div className="mb-3">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
-                                                <Truck size={14} className="text-indigo-500" /> Та'minotchi (Supplier)
-                                            </label>
-                                            <select
-                                                value={selectedSupplier}
-                                                onChange={(e) => setSelectedSupplier(e.target.value)}
-                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 font-medium"
-                                            >
-                                                <option value="">-- Tanlanmagan --</option>
-                                                {suppliers.map((sup: any) => (
-                                                    <option key={sup._id} value={sup._id}>{sup.name}</option>
-                                                ))}
-                                            </select>
+                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-3">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                                                    <Truck size={14} className="text-indigo-500" /> Поставщик (Имя)
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Ф.И.О"
+                                                    value={supplierName}
+                                                    onChange={(e) => setSupplierName(e.target.value)}
+                                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                                                    <Truck size={14} className="text-indigo-500" /> Телефон
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="+998"
+                                                    value={supplierPhone}
+                                                    onChange={(e) => setSupplierPhone(e.target.value)}
+                                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
+                                                />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
-                                                <CreditCard size={14} className="text-emerald-500" /> Boshlang'ich To'lov
-                                            </label>
-                                            <input
-                                                type="number"
-                                                placeholder="0"
-                                                value={amountPaid}
-                                                onChange={(e) => setAmountPaid(e.target.value)}
-                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-emerald-700 focus:outline-none focus:border-emerald-500"
-                                            />
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                                                    <CreditCard size={14} className="text-emerald-500" /> Статус оплаты
+                                                </label>
+                                                <select
+                                                    value={paymentStatus}
+                                                    onChange={(e) => setPaymentStatus(e.target.value as 'paid' | 'debt')}
+                                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500 font-medium"
+                                                >
+                                                    <option value="paid">Оплачено (Naxd/Karta)</option>
+                                                    <option value="debt">В долг (Qarz)</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                                                    {paymentStatus === 'paid' ? 'Сумма оплаты' : 'Внесенная сумма'}
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="0"
+                                                    value={paidAmount}
+                                                    onChange={(e) => setPaidAmount(e.target.value)}
+                                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-emerald-700 focus:outline-none focus:border-emerald-500"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 

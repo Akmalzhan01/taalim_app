@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Package, Plus, Search, Calendar, Trash2, Eye, X } from 'lucide-react';
+import { Package, Plus, Search, Calendar, Trash2, Eye, X, Check, CreditCard } from 'lucide-react';
 import { format } from 'date-fns';
-import { getSupplies, reset, deleteSupply, getSupplyDetails, clearSupplyDetails } from '../features/supplies/supplySlice';
+import { getSupplies, reset, deleteSupply, getSupplyDetails, clearSupplyDetails, payDebt } from '../features/supplies/supplySlice';
 import type { AppDispatch, RootState } from '../app/store';
 import SupplyModal from '../components/SupplyModal';
 import BranchFilter from '../components/BranchFilter';
@@ -17,6 +17,9 @@ const Supplies = () => {
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [dateFilter, setDateFilter] = useState('');
+    const [isPayModalOpen, setIsPayModalOpen] = useState(false);
+    const [selectedSupplyForPay, setSelectedSupplyForPay] = useState<any>(null);
+    const [payAmount, setPayAmount] = useState('');
 
     useEffect(() => {
         dispatch(getSupplies(selectedBranch));
@@ -26,9 +29,9 @@ const Supplies = () => {
     }, [dispatch, isError, message, selectedBranch]);
 
     const filteredSupplies = supplies.filter((supply: any) => {
-        const matchesSearch = supply.items.some((item: any) =>
-            item.product?.title?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        const matchesSearch =
+            supply.items.some((item: any) => item.product?.title?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            supply.supplierName?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesDate = dateFilter ? supply.date.startsWith(dateFilter) : true;
         return matchesSearch && matchesDate;
     });
@@ -42,6 +45,25 @@ const Supplies = () => {
     const handleViewDetails = (id: string) => {
         dispatch(getSupplyDetails(id));
         setIsDetailOpen(true);
+    };
+
+    const handleOpenPayModal = (supply: any) => {
+        setSelectedSupplyForPay(supply);
+        setPayAmount(supply.debtAmount.toString());
+        setIsPayModalOpen(true);
+    };
+
+    const handlePayDebt = async () => {
+        if (!selectedSupplyForPay || !payAmount) return;
+        const resultAction = await dispatch(payDebt({ id: selectedSupplyForPay._id, amount: Number(payAmount) }));
+        if (payDebt.fulfilled.match(resultAction)) {
+            alert('Оплата успешно зафиксирована');
+            setIsPayModalOpen(false);
+            setSelectedSupplyForPay(null);
+            setPayAmount('');
+        } else {
+            alert('Ошибка при оплате');
+        }
     };
 
     return (
@@ -97,9 +119,10 @@ const Supplies = () => {
                         <thead className="bg-slate-50 border-b border-slate-100">
                             <tr>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Дата</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Сотрудник</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Поставщик</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Книги</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Итоговая сомма</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Статус / Долг</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Сумма</th>
                                 <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Действие</th>
                             </tr>
                         </thead>
@@ -112,33 +135,53 @@ const Supplies = () => {
                                 filteredSupplies.map((supply: any) => (
                                     <tr key={supply._id} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
-                                            {format(new Date(supply.date), 'dd.MM.yyyy HH:mm')}
+                                            {format(new Date(supply.date), 'dd.MM.yy HH:mm')}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                                            {supply.createdBy?.name || 'Noma\'lum'}
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-bold text-slate-900">{supply.supplierName || '---'}</div>
+                                            <div className="text-xs text-slate-500">{supply.supplierPhone || ''}</div>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-slate-600">
-                                            {supply.items.map((item: any, i: number) => (
-                                                <div key={i} className="text-xs">
-                                                    • {item.product?.title || 'Удаленная книга'} ({item.qty} шт.)
-                                                </div>
-                                            ))}
+                                            <span className="text-xs font-medium bg-slate-100 px-2 py-0.5 rounded-full">
+                                                {supply.items.length} наим.
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex flex-col gap-1">
+                                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full w-fit ${supply.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                    {supply.paymentStatus === 'paid' ? 'Оплачено' : 'Долг'}
+                                                </span>
+                                                {supply.debtAmount > 0 && (
+                                                    <span className="text-sm font-black text-rose-600">
+                                                        {supply.debtAmount.toLocaleString()} сом
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">
-                                            {supply.totalCost.toLocaleString()} сом
+                                            {supply.totalAmount?.toLocaleString() || (supply.totalCost || 0).toLocaleString()} сом
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                                        <td className="px-6 py-4 whitespace-nowrap text-right space-x-1">
+                                            {supply.paymentStatus === 'debt' && (
+                                                <button
+                                                    onClick={() => handleOpenPayModal(supply)}
+                                                    className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                    title="Оплатить долг"
+                                                >
+                                                    <CreditCard size={18} />
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={() => handleViewDetails(supply._id)}
                                                 className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                title="Детали прихода"
+                                                title="Детали"
                                             >
                                                 <Eye size={18} />
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(supply._id, supply.totalCost)}
+                                                onClick={() => handleDelete(supply._id, supply.totalAmount || supply.totalCost)}
                                                 className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                                                title="Удалить приход"
+                                                title="Удалить"
                                             >
                                                 <Trash2 size={18} />
                                             </button>
@@ -180,14 +223,26 @@ const Supplies = () => {
                                 <div className="py-20 text-center text-slate-500">Загрузка данных...</div>
                             ) : (
                                 <div className="space-y-6">
-                                    <div className="bg-indigo-50/50 p-4 rounded-2xl flex justify-between items-center border border-indigo-50">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-indigo-50/50 p-5 rounded-2xl border border-indigo-50">
                                         <div>
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Сотрудник</p>
-                                            <p className="text-sm font-semibold text-slate-900">{supplyDetails.createdBy?.name || 'Неизвестно'}</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Поставщик</p>
+                                            <p className="text-sm font-bold text-slate-900">{supplyDetails.supplierName || '---'}</p>
+                                            <p className="text-xs text-slate-500">{supplyDetails.supplierPhone || ''}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Статус / Оплачено</p>
+                                            <div className="flex flex-col gap-1">
+                                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full w-fit ${supplyDetails.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                    {supplyDetails.paymentStatus === 'paid' ? 'Полностью оплачено' : 'Есть задолженность'}
+                                                </span>
+                                                <p className="text-sm font-semibold text-emerald-600">Оплачено: {supplyDetails.paidAmount?.toLocaleString()} сом</p>
+                                                {supplyDetails.debtAmount > 0 && <p className="text-sm font-bold text-rose-600">Долг: {supplyDetails.debtAmount?.toLocaleString()} сом</p>}
+                                            </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Итоговая сомма</p>
-                                            <p className="text-xl font-black text-indigo-700">{supplyDetails.totalCost.toLocaleString()} сом</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Итоговая сомма</p>
+                                            <p className="text-2xl font-black text-indigo-700">{(supplyDetails.totalAmount || supplyDetails.totalCost).toLocaleString()} сом</p>
+                                            <p className="text-[10px] text-slate-400 mt-1">Создал: {supplyDetails.createdBy?.name}</p>
                                         </div>
                                     </div>
 
@@ -226,6 +281,42 @@ const Supplies = () => {
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Pay Debt Modal */}
+            {isPayModalOpen && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+                    <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-bold text-slate-900">Оплата долга</h3>
+                            <button onClick={() => setIsPayModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100">
+                                <p className="text-xs text-orange-600 font-bold uppercase tracking-wider mb-1">Текущий долг</p>
+                                <p className="text-2xl font-black text-orange-700">{selectedSupplyForPay?.debtAmount.toLocaleString()} сом</p>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide ml-1">Сумма оплаты</label>
+                                <input
+                                    type="number"
+                                    value={payAmount}
+                                    onChange={(e) => setPayAmount(e.target.value)}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold text-slate-900"
+                                    autoFocus
+                                />
+                            </div>
+                            <button
+                                onClick={handlePayDebt}
+                                className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Check size={20} /> Зафиксировать оплату
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -32,9 +32,7 @@ const bookSchema = mongoose.Schema({
             minStockLimit: { type: Number, default: 5 },
         }
     ],
-    countInStock: { type: Number, required: true, default: 0 }, // Total across all branches or legacy
-    minStockLimit: { type: Number, default: 5 },
-    costPrice: { type: Number, default: 0 },
+    countInStock: { type: Number, required: true, default: 0 }, // Total across all branches
     cashbackAmount: { type: Number, default: 0 },
     isBundle: { type: Boolean, default: false },
     bundleItems: [{
