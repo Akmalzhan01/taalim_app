@@ -8,7 +8,7 @@ const Vendor = require('../models/Vendor');
 // @route   POST /api/supplies
 // @access  Private/Admin
 const addSupply = asyncHandler(async (req, res) => {
-    const { items, totalCost, totalAmount, date, supplierName, supplierPhone, paymentStatus, paidAmount, branch } = req.body;
+    const { items, totalCost, totalAmount, date, supplierName, supplierPhone, paymentStatus, paidAmount, branch, type } = req.body;
 
     const actualTotalCost = totalCost || totalAmount || 0;
 
@@ -38,6 +38,8 @@ const addSupply = asyncHandler(async (req, res) => {
             });
         }
 
+        const supplyType = type === 'adjustment' ? 'adjustment' : 'purchase';
+
         const supply = new Supply({
             createdBy: req.user._id,
             branch: supplyBranch,
@@ -46,16 +48,17 @@ const addSupply = asyncHandler(async (req, res) => {
             date: date || Date.now(),
             supplierName,
             supplierPhone,
-            paymentStatus: paymentStatus || 'paid',
-            paidAmount: actualPaid,
-            debtAmount,
-            paymentHistory
+            paymentStatus: supplyType === 'adjustment' ? 'paid' : (paymentStatus || 'paid'),
+            paidAmount: supplyType === 'adjustment' ? 0 : actualPaid,
+            debtAmount: supplyType === 'adjustment' ? 0 : debtAmount,
+            paymentHistory: supplyType === 'adjustment' ? [] : paymentHistory,
+            type: supplyType,
         });
 
         const createdSupply = await supply.save();
 
-        // Update or create Vendor stats
-        if (supplierName) {
+        // Update or create Vendor stats (only for real purchases)
+        if (supplierName && supplyType === 'purchase') {
             let vendor = await Vendor.findOne({ name: supplierName, branch: supplyBranch });
             if (!vendor) {
                 vendor = new Vendor({

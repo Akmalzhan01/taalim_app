@@ -72,8 +72,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     const expenditures = await Expenditure.find(finalFilter);
     const totalExpenditures = expenditures.reduce((acc, exp) => acc + exp.amount, 0);
 
-    // 3. Supplies (New)
-    const supplies = await Supply.find(finalFilter);
+    // 3. Supplies (only real purchases, not stock adjustments)
+    const supplies = await Supply.find({ ...finalFilter, type: { $ne: 'adjustment' } });
     const totalSupplies = supplies.reduce((acc, sup) => acc + sup.totalCost, 0);
 
     // Net Profit Calculation (Revenue - COGS - Expenditures - Supplies - Cashback Used - Refunds are already not in Revenue)
@@ -272,7 +272,7 @@ const getSalesChartData = asyncHandler(async (req, res) => {
         expByDate[dateString] += exp.amount;
     });
 
-    const supplies = await Supply.find({ ...dateFilter, ...branchFilter });
+    const supplies = await Supply.find({ ...dateFilter, ...branchFilter, type: { $ne: 'adjustment' } });
     const suppliesByDate = {};
     supplies.forEach(sup => {
         const dateString = groupByMonth

@@ -29,6 +29,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
     const [supplierPhone, setSupplierPhone] = useState('');
     const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState<'paid' | 'debt'>('paid');
+    const [supplyType, setSupplyType] = useState<'purchase' | 'adjustment'>('purchase');
 
     const filteredSuppliers = supplierName
         ? vendors.filter((v: any) => v.name.toLowerCase().includes(supplierName.toLowerCase()) || (v.phone && v.phone.includes(supplierName)))
@@ -152,9 +153,10 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
             date: new Date(),
             supplierName,
             supplierPhone,
-            paymentStatus,
+            paymentStatus: supplyType === 'adjustment' ? 'paid' : paymentStatus,
             branch: selectedBranch,
-            paidAmount: Number(paidAmount) || 0
+            paidAmount: supplyType === 'adjustment' ? 0 : (Number(paidAmount) || 0),
+            type: supplyType,
         };
 
         const resultAction = await dispatch(createSupply(supplyData));
@@ -165,6 +167,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
             setSupplierPhone('');
             setPaymentStatus('paid');
             setPaidAmount('');
+            setSupplyType('purchase');
             onClose();
         } else {
             alert('Произошла ошибка');
@@ -213,10 +216,32 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                         </h3>
                         <p className="text-xs text-slate-500 mt-0.5">Прием товара и обновление базы</p>
                     </div>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-all">
-                        <X size={20} />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
+                            <button
+                                onClick={() => setSupplyType('purchase')}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${supplyType === 'purchase' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Sotib olish
+                            </button>
+                            <button
+                                onClick={() => setSupplyType('adjustment')}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${supplyType === 'adjustment' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Korrektura
+                            </button>
+                        </div>
+                        <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-all">
+                            <X size={20} />
+                        </button>
+                    </div>
                 </div>
+                {supplyType === 'adjustment' && (
+                    <div className="px-6 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
+                        <span className="text-amber-600 text-xs font-bold">Korrektura rejimi:</span>
+                        <span className="text-amber-700 text-xs">Kitoblar skladga kiritiladi, lekin xarajat hisoblanmaydi (rashod yozilmaydi)</span>
+                    </div>
+                )}
 
                 <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Left Side: Search and Quick Add */}
@@ -473,6 +498,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
 
                             {basket.length > 0 && (
                                 <div className="p-4 bg-white border-t border-slate-100 flex flex-col gap-4">
+                                    {supplyType === 'purchase' && (
                                     <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-3">
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="relative">
@@ -552,6 +578,12 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                                             </div>
                                         </div>
                                     </div>
+                                    )}
+                                    {supplyType === 'adjustment' && (
+                                        <div className="bg-amber-50 p-3 rounded-xl border border-amber-100 flex items-center gap-2">
+                                            <span className="text-amber-600 text-xs">Korrektura: yetkazib beruvchi va to'lov ma'lumotlari saqlanmaydi. Faqat sklad yangilanadi.</span>
+                                        </div>
+                                    )}
 
                                     <div className="flex justify-between items-center px-2">
                                         <span className="text-sm font-medium text-slate-500">Общая сомма:</span>

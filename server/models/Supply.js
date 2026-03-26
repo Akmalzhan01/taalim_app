@@ -71,7 +71,12 @@ const supplySchema = mongoose.Schema(
                 date: { type: Date, required: true, default: Date.now },
                 handledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
             }
-        ]
+        ],
+        type: {
+            type: String,
+            enum: ['purchase', 'adjustment'],
+            default: 'purchase',
+        },
     },
     {
         timestamps: true,

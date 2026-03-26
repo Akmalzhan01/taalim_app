@@ -148,13 +148,21 @@ const Supplies = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex flex-col gap-1">
-                                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full w-fit ${supply.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
-                                                    {supply.paymentStatus === 'paid' ? 'Оплачено' : 'Долг'}
-                                                </span>
-                                                {supply.debtAmount > 0 && (
-                                                    <span className="text-sm font-black text-rose-600">
-                                                        {supply.debtAmount.toLocaleString()} сом
+                                                {supply.type === 'adjustment' ? (
+                                                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full w-fit bg-amber-100 text-amber-700">
+                                                        Korrektura
                                                     </span>
+                                                ) : (
+                                                    <>
+                                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full w-fit ${supply.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                            {supply.paymentStatus === 'paid' ? 'Оплачено' : 'Долг'}
+                                                        </span>
+                                                        {supply.debtAmount > 0 && (
+                                                            <span className="text-sm font-black text-rose-600">
+                                                                {supply.debtAmount.toLocaleString()} сом
+                                                            </span>
+                                                        )}
+                                                    </>
                                                 )}
                                             </div>
                                         </td>
@@ -162,7 +170,7 @@ const Supplies = () => {
                                             {supply.totalAmount?.toLocaleString() || (supply.totalCost || 0).toLocaleString()} сом
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right space-x-1">
-                                            {supply.paymentStatus === 'debt' && (
+                                            {supply.type !== 'adjustment' && supply.paymentStatus === 'debt' && (
                                                 <button
                                                     onClick={() => handleOpenPayModal(supply)}
                                                     className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
