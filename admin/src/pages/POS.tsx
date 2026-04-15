@@ -219,7 +219,7 @@ const POS = () => {
             title: customItemName,
             price: Number(customItemPrice),
             qty: Number(customItemQty),
-            image: 'https://via.placeholder.com/150?text=Свой+товар',
+            image: '',
             countInStock: 9999
         };
         setCart([...cart, newItem]);

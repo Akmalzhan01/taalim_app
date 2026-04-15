@@ -107,7 +107,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
             cashbackAmount: Number(newBookData.cashbackAmount),
             summary: newBookData.summary?.trim() || 'Новая книга (добавлена быстро)',
             description: newBookData.description?.trim() || 'Новая книга добавлена через приход',
-            image: newBookData.image?.trim() || 'https://via.placeholder.com/150',
+            image: newBookData.image?.trim() || '',
             size: newBookData.size?.trim() || 'A5',
             coverType: newBookData.coverType?.trim() || 'Мягкий переплет',
             ageLimit: newBookData.ageLimit?.trim() || '0+',
