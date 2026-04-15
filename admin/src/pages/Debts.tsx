@@ -16,7 +16,7 @@ export default function Debts() {
     const dispatch = useDispatch<AppDispatch>();
     const { debts, isLoading } = useSelector((state: RootState) => state.debts);
     const { user } = useSelector((state: RootState) => state.auth);
-    const { branches, selectedBranch } = useSelector((state: RootState) => state.branches);
+    const { selectedBranch } = useSelector((state: RootState) => state.branches);
 
     const isSuperAdmin = user?.role === 'superadmin' || user?.isAdmin;
     const userBranchId = user?.branch?._id || user?.branch || '';
