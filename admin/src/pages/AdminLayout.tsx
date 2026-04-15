@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link, Outlet } from 'react-router-dom';
 import { logout, reset } from '../features/auth/authSlice';
 import type { AppDispatch, RootState } from '../app/store';
-import { LayoutDashboard, ShoppingCart, Users, BookOpen, LogOut, Grid, Quote, MessageSquare, Share2, ChartCandlestick, Menu, X, Settings, Barcode, PieChart, LayoutList, ReceiptText, Package, UserPlus, Store, Truck } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, BookOpen, LogOut, Grid, Quote, MessageSquare, Share2, ChartCandlestick, Menu, X, Settings, Barcode, PieChart, LayoutList, ReceiptText, Package, UserPlus, Store, Truck, Landmark, ArrowDownToLine } from 'lucide-react';
 
 const AdminLayout = () => {
     const navigate = useNavigate();
@@ -60,6 +60,8 @@ const AdminLayout = () => {
                 { id: 'supplies', label: 'Приход (Закупка)', path: '/dashboard/supplies', icon: <Package size={18} /> },
                 { id: 'vendors', label: 'Поставщики', path: '/dashboard/vendors', icon: <Truck size={18} /> },
                 { id: 'expenses', label: 'Расходы', path: '/dashboard/expenses', icon: <ReceiptText size={18} />, className: 'text-rose-600 hover:bg-rose-50' },
+                { id: 'debts', label: 'Долги (Займы)', path: '/dashboard/debts', icon: <Landmark size={18} />, className: 'text-rose-700 hover:bg-rose-50' },
+                { id: 'cash-receipts', label: 'Поступления', path: '/dashboard/cash-receipts', icon: <ArrowDownToLine size={18} />, className: 'text-indigo-700 hover:bg-indigo-50' },
             ]
         },
         {

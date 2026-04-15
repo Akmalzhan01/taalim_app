@@ -4,6 +4,8 @@ const Expenditure = require('../models/Expenditure');
 const Book = require('../models/Book');
 const Supply = require('../models/Supply');
 const SupplyBatch = require('../models/SupplyBatch');
+const Debt = require('../models/Debt');
+const CashReceipt = require('../models/CashReceipt');
 
 // @desc    Get dashboard statistics
 // @route   GET /api/reports/dashboard
@@ -100,9 +102,16 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
 
     // 5. Total Debt To Suppliers
-    // Calculate total unpaid debt from the Supply model
     const allSupplies = await Supply.find(branchFilter.branch ? { branch: branchFilter.branch } : {});
     const totalDebtToSuppliers = allSupplies.reduce((acc, sup) => acc + (sup.debtAmount || 0), 0);
+
+    // 6. Total borrowed debts (ishona qarzlari)
+    const allDebts = await Debt.find(branchFilter.branch ? { branch: branchFilter.branch } : {});
+    const totalBorrowedDebt = allDebts.reduce((acc, d) => acc + (d.debtAmount || 0), 0);
+
+    // 7. Total cash receipts (kelgan pullar)
+    const allReceipts = await CashReceipt.find(branchFilter.branch ? { branch: branchFilter.branch } : {});
+    const totalCashReceipts = allReceipts.reduce((acc, r) => acc + (r.amount || 0), 0);
 
     res.json({
         totalRevenue,
@@ -119,7 +128,9 @@ const getDashboardStats = asyncHandler(async (req, res) => {
         totalOrders: orders.length,
         totalInventoryCost,
         totalInventoryRetail,
-        totalDebtToSuppliers
+        totalDebtToSuppliers,
+        totalBorrowedDebt,
+        totalCashReceipts,
     });
 });
 

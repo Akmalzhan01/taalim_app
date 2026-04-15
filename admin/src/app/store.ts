@@ -18,6 +18,8 @@ import supplyReducer from '../features/supplies/supplySlice';
 import branchReducer from '../features/branches/branchSlice';
 import customerReducer from '../features/customers/customerSlice';
 import vendorReducer from '../features/vendors/vendorSlice';
+import debtReducer from '../features/debts/debtSlice';
+import cashReceiptReducer from '../features/cashReceipts/cashReceiptSlice';
 
 export const store = configureStore({
     reducer: {
@@ -39,6 +41,8 @@ export const store = configureStore({
         branches: branchReducer,
         customers: customerReducer,
         vendors: vendorReducer,
+        debts: debtReducer,
+        cashReceipts: cashReceiptReducer,
     },
 });
 

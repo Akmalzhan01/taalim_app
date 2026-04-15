@@ -25,6 +25,8 @@ import Expenses from './pages/Expenses';
 import Supplies from './pages/Supplies';
 import Branches from './pages/Branches';
 import Vendors from './pages/Vendors';
+import Debts from './pages/Debts';
+import CashReceipts from './pages/CashReceipts';
 import AdminLayout from './pages/AdminLayout';
 import PosCustomerDisplay from './pages/PosCustomerDisplay';
 
@@ -170,6 +172,18 @@ function App() {
           <Route path="vendors" element={
             <PermissionRoute moduleId="supplies">
               <Vendors />
+            </PermissionRoute>
+          } />
+
+          <Route path="debts" element={
+            <PermissionRoute moduleId="debts">
+              <Debts />
+            </PermissionRoute>
+          } />
+
+          <Route path="cash-receipts" element={
+            <PermissionRoute moduleId="cash-receipts">
+              <CashReceipts />
             </PermissionRoute>
           } />
 

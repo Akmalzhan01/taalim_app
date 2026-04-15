@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getDashboardStats, getTopBooks, getSalesChart, getSalesByDate, clearSelectedDateSales } from '../features/reports/reportSlice';
-import { getBranches } from '../features/branches/branchSlice';
+import { getBranches, setSelectedBranch } from '../features/branches/branchSlice';
 import { XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, BookOpen, ShoppingBag, Banknote, RefreshCcw, CalendarRange, ArrowUpRight, ArrowDownRight, X, Loader2, Store, Package, Wallet } from 'lucide-react';
 import type { AppDispatch, RootState } from '../app/store';
@@ -19,17 +19,13 @@ const Reports = () => {
     } = useSelector((state: RootState) => state.reports);
 
     const { user } = useSelector((state: RootState) => state.auth);
-    const { branches } = useSelector((state: RootState) => state.branches);
+    const { branches, selectedBranch } = useSelector((state: RootState) => state.branches);
 
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [selectedDateModal, setSelectedDateModal] = useState<string | null>(null);
     const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
-    // Default to user's branch if not superadmin
-    const [selectedBranch, setSelectedBranch] = useState<string>(
-        user?.role !== 'superadmin' && !user?.isAdmin ? ((user?.branch as any)?._id || (user?.branch as any) || '') : ''
-    );
 
     useEffect(() => {
         dispatch(getBranches());
@@ -94,7 +90,9 @@ const Reports = () => {
         totalOrders,
         totalInventoryCost,
         totalInventoryRetail,
-        totalDebtToSuppliers
+        totalDebtToSuppliers,
+        totalBorrowedDebt,
+        totalCashReceipts,
     } = dashboardStats || {};
 
     return (
@@ -129,7 +127,7 @@ const Reports = () => {
                             <Store size={16} className="text-slate-400" />
                             <select
                                 value={selectedBranch}
-                                onChange={(e) => setSelectedBranch(e.target.value)}
+                                onChange={(e) => dispatch(setSelectedBranch(e.target.value))}
                                 className="text-sm border-none focus:ring-0 text-slate-700 bg-transparent outline-none cursor-pointer font-bold"
                             >
                                 <option value="">Все филиалы</option>
@@ -307,7 +305,18 @@ const Reports = () => {
                             </div>
                         </div>
                         <div className="mt-4 flex flex-col gap-1.5 text-xs font-medium border-t border-slate-100 pt-3 relative z-10 text-slate-500">
-                            <p>Общая задолженность магазина перед поставщиками и издательствами.</p>
+                            <div className="flex justify-between">
+                                <span>Долг поставщикам:</span>
+                                <span className="font-bold text-red-500">{totalDebtToSuppliers?.toLocaleString() || 0} сом</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Займы (полученные):</span>
+                                <span className="font-bold text-rose-600">{(totalBorrowedDebt as any)?.toLocaleString() || 0} сом</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>Поступления:</span>
+                                <span className="font-bold text-indigo-600">{(totalCashReceipts as any)?.toLocaleString() || 0} сом</span>
+                            </div>
                         </div>
                     </div>
                 </div>
