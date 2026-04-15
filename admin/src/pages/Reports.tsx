@@ -210,6 +210,10 @@ const Reports = () => {
                                 <span className="text-slate-500">Mobile (Приложение):</span>
                                 <span className="text-emerald-700 font-bold">{mobileRevenue?.toLocaleString() || 0} сом</span>
                             </div>
+                            <div className="flex justify-between items-center bg-indigo-50 px-2 py-1.5 rounded-lg">
+                                <span className="text-indigo-600">Поступления (нал. вклады):</span>
+                                <span className="text-indigo-700 font-bold">+{(totalCashReceipts as any)?.toLocaleString() || 0} сом</span>
+                            </div>
                         </div>
                     </div>
 
@@ -312,10 +316,6 @@ const Reports = () => {
                             <div className="flex justify-between">
                                 <span>Займы (полученные):</span>
                                 <span className="font-bold text-rose-600">{(totalBorrowedDebt as any)?.toLocaleString() || 0} сом</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Поступления:</span>
-                                <span className="font-bold text-indigo-600">{(totalCashReceipts as any)?.toLocaleString() || 0} сом</span>
                             </div>
                         </div>
                     </div>
