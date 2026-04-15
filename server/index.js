@@ -19,24 +19,30 @@ const app = express();
 app.use(express.json());
 
 const allowedOrigins = [
-    'http://localhost:5173',          // Local Dev
-    'https://taalim-app-1.onrender.com', // Admin panel domain
-    process.env.FRONTEND_URL,        // Production Render URL (ENV)
-].filter(origin => origin); // Remove undefined if env not set
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'https://taalim-app-1.onrender.com',
+    process.env.FRONTEND_URL,
+].filter(Boolean);
 
 app.use(cors({
     origin: function (origin, callback) {
-        // allow requests with no origin (like mobile apps or curl requests)
+        // Allow requests with no origin (mobile apps, curl, Postman)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not ' +
-                'allow access from the specified Origin.';
-            return callback(new Error(msg), false);
-        }
-        return callback(null, true);
+        // Allow any onrender.com subdomain
+        if (/^https:\/\/[\w-]+\.onrender\.com$/.test(origin)) return callback(null, true);
+        // Allow explicitly listed origins
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+
+        return callback(new Error('Not allowed by CORS'), false);
     },
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// Handle OPTIONS preflight for all routes
+app.options(/.*/, cors());
 
 // Connect to Database
 connectDB();
@@ -72,4 +78,17 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+
+    // Keep-alive: prevent Render free tier from sleeping (ping every 14 min)
+    if (process.env.NODE_ENV === 'production') {
+        const https = require('https');
+        const selfUrl = process.env.SELF_URL || 'https://taalim-app.onrender.com';
+        setInterval(() => {
+            https.get(selfUrl, (res) => {
+                console.log(`Keep-alive ping: ${res.statusCode}`);
+            }).on('error', (err) => {
+                console.log(`Keep-alive error: ${err.message}`);
+            });
+        }, 14 * 60 * 1000); // 14 minutes
+    }
 });
