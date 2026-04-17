@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Package, Plus, Search, Calendar, Trash2, Eye, X, Check, CreditCard } from 'lucide-react';
+import { Package, Plus, Search, Calendar, Trash2, Eye, X, Check, CreditCard, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { getSupplies, reset, deleteSupply, getSupplyDetails, clearSupplyDetails, payDebt } from '../features/supplies/supplySlice';
 import type { AppDispatch, RootState } from '../app/store';
@@ -14,6 +14,7 @@ const Supplies = () => {
     const { selectedBranch } = useSelector((state: RootState) => state.branches);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [supplyToEdit, setSupplyToEdit] = useState<any>(null);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [dateFilter, setDateFilter] = useState('');
@@ -88,7 +89,15 @@ const Supplies = () => {
                 </button>
             </div>
 
-            <SupplyModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); dispatch(getSupplies()); }} />
+            <SupplyModal
+                isOpen={isModalOpen || supplyToEdit !== null}
+                supplyToEdit={supplyToEdit}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setSupplyToEdit(null);
+                    dispatch(getSupplies(selectedBranch));
+                }}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="relative">
@@ -179,6 +188,13 @@ const Supplies = () => {
                                                     <CreditCard size={18} />
                                                 </button>
                                             )}
+                                            <button
+                                                onClick={() => setSupplyToEdit(supply)}
+                                                className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                                title="Редактировать"
+                                            >
+                                                <Pencil size={18} />
+                                            </button>
                                             <button
                                                 onClick={() => handleViewDetails(supply._id)}
                                                 className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"

@@ -227,10 +227,81 @@ const deleteSupply = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Update supply (items, supplier, payment)
+// @route   PUT /api/supplies/:id
+// @access  Private/Admin
+const updateSupply = asyncHandler(async (req, res) => {
+    const supply = await Supply.findById(req.params.id);
+
+    if (!supply) {
+        res.status(404);
+        throw new Error('Supply not found');
+    }
+
+    // Branch isolation check
+    if (req.user.role !== 'superadmin' && !req.user.isAdmin) {
+        const userBranch = (req.user.branch._id || req.user.branch).toString();
+        if (!supply.branch || supply.branch.toString() !== userBranch) {
+            res.status(403);
+            throw new Error('Not authorized to edit this supply');
+        }
+    }
+
+    const { items, totalCost, supplierName, supplierPhone, paymentStatus, paidAmount, date } = req.body;
+
+    // 1. Revert old stock
+    for (const oldItem of supply.items) {
+        const book = await Book.findById(oldItem.product);
+        if (book) {
+            book.countInStock = Math.max(0, book.countInStock - oldItem.qty);
+            await book.save();
+        }
+    }
+
+    // 2. Apply new stock + create FIFO batches
+    for (const newItem of items) {
+        const book = await Book.findById(newItem.product);
+        if (book) {
+            book.countInStock += newItem.qty;
+            await book.save();
+
+            await new SupplyBatch({
+                book: newItem.product,
+                branch: supply.branch,
+                costPrice: newItem.purchasePrice,
+                quantity: newItem.qty,
+                initialQuantity: newItem.qty,
+                dateReceived: date || supply.date,
+            }).save();
+        }
+    }
+
+    const actualTotalCost = Number(totalCost) || 0;
+    const debtAmount = paymentStatus === 'debt'
+        ? Math.max(0, actualTotalCost - Number(paidAmount || 0))
+        : 0;
+    const actualPaid = paymentStatus === 'debt'
+        ? Number(paidAmount || 0)
+        : actualTotalCost;
+
+    supply.items = items;
+    supply.totalCost = actualTotalCost;
+    supply.supplierName = supplierName !== undefined ? supplierName : supply.supplierName;
+    supply.supplierPhone = supplierPhone !== undefined ? supplierPhone : supply.supplierPhone;
+    supply.paymentStatus = paymentStatus || supply.paymentStatus;
+    supply.paidAmount = actualPaid;
+    supply.debtAmount = debtAmount;
+    if (date) supply.date = date;
+
+    const updatedSupply = await supply.save();
+    res.json(updatedSupply);
+});
+
 module.exports = {
     addSupply,
     getSupplies,
     getSupplyById,
     payDebt,
     deleteSupply,
+    updateSupply,
 };

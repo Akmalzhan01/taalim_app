@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { X, Search, Plus, Trash2, Package, Check, BookPlus, Loader2, Truck, CreditCard } from 'lucide-react';
 import { getBooks, createBook } from '../features/books/bookSlice';
 import { getCategories } from '../features/categories/categorySlice';
-import { createSupply } from '../features/supplies/supplySlice';
+import { createSupply, updateSupply } from '../features/supplies/supplySlice';
 import { getVendors } from '../features/vendors/vendorSlice';
 import type { AppDispatch, RootState } from '../app/store';
 import { toast } from 'react-hot-toast';
@@ -12,9 +12,10 @@ import axios from 'axios';
 interface SupplyModalProps {
     isOpen: boolean;
     onClose: () => void;
+    supplyToEdit?: any;
 }
 
-const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
+const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose, supplyToEdit }) => {
     const dispatch = useDispatch<AppDispatch>();
     const { books } = useSelector((state: RootState) => state.books);
     const { categories } = useSelector((state: RootState) => state.categories);
@@ -58,12 +59,29 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
             dispatch(getBooks(selectedBranch));
             dispatch(getCategories());
             dispatch(getVendors());
-            setSupplierName('');
-            setSupplierPhone('');
-            setPaymentStatus('paid');
-            setPaidAmount('');
+            if (supplyToEdit) {
+                setSupplierName(supplyToEdit.supplierName || '');
+                setSupplierPhone(supplyToEdit.supplierPhone || '');
+                setPaymentStatus(supplyToEdit.paymentStatus || 'paid');
+                setPaidAmount(supplyToEdit.paidAmount?.toString() || '');
+                setSupplyType(supplyToEdit.type || 'purchase');
+                setBasket(
+                    (supplyToEdit.items || []).map((item: any) => ({
+                        product: item.product?._id || item.product,
+                        title: item.product?.title || 'Книга',
+                        qty: item.qty,
+                        purchasePrice: item.purchasePrice,
+                    }))
+                );
+            } else {
+                setSupplierName('');
+                setSupplierPhone('');
+                setPaymentStatus('paid');
+                setPaidAmount('');
+                setBasket([]);
+            }
         }
-    }, [isOpen, dispatch, selectedBranch]);
+    }, [isOpen, dispatch, selectedBranch, supplyToEdit]);
 
     const filteredBooks = books.filter((book: any) =>
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -149,6 +167,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                 qty: item.qty,
                 purchasePrice: item.purchasePrice
             })),
+            totalCost: totalAmount,
             totalAmount,
             date: new Date(),
             supplierName,
@@ -159,18 +178,28 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
             type: supplyType,
         };
 
-        const resultAction = await dispatch(createSupply(supplyData));
-        if (createSupply.fulfilled.match(resultAction)) {
-            alert('Приход успешно завершен');
-            setBasket([]);
-            setSupplierName('');
-            setSupplierPhone('');
-            setPaymentStatus('paid');
-            setPaidAmount('');
-            setSupplyType('purchase');
-            onClose();
+        if (supplyToEdit) {
+            const resultAction = await dispatch(updateSupply({ id: supplyToEdit._id, supplyData }));
+            if (updateSupply.fulfilled.match(resultAction)) {
+                alert('Приход успешно обновлён');
+                onClose();
+            } else {
+                alert('Ошибка при обновлении');
+            }
         } else {
-            alert('Произошла ошибка');
+            const resultAction = await dispatch(createSupply(supplyData));
+            if (createSupply.fulfilled.match(resultAction)) {
+                alert('Приход успешно завершен');
+                setBasket([]);
+                setSupplierName('');
+                setSupplierPhone('');
+                setPaymentStatus('paid');
+                setPaidAmount('');
+                setSupplyType('purchase');
+                onClose();
+            } else {
+                alert('Произошла ошибка');
+            }
         }
     };
 
@@ -212,9 +241,9 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                     <div>
                         <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                             <Package size={24} className="text-indigo-600" />
-                            Новый Приход (Supply)
+                            {supplyToEdit ? 'Редактировать приход' : 'Новый Приход (Supply)'}
                         </h3>
-                        <p className="text-xs text-slate-500 mt-0.5">Прием товара и обновление базы</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{supplyToEdit ? 'Изменение данных прихода' : 'Прием товара и обновление базы'}</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
@@ -597,7 +626,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose }) => {
                                         className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 disabled:opacity-50 shadow-xl shadow-slate-200"
                                     >
                                         {isSupplyLoading ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
-                                        Завершить приход
+                                        {supplyToEdit ? 'Сохранить изменения' : 'Завершить приход'}
                                     </button>
                                 </div>
                             )}

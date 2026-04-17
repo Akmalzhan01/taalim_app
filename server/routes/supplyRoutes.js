@@ -5,7 +5,8 @@ const {
     getSupplies,
     getSupplyById,
     payDebt,
-    deleteSupply
+    deleteSupply,
+    updateSupply,
 } = require('../controllers/supplyController');
 const { protect, checkPermission } = require('../middleware/authMiddleware');
 
@@ -17,6 +18,7 @@ router.post('/:id/pay', protect, checkPermission('supplies'), payDebt);
 
 router.route('/:id')
     .get(protect, checkPermission('supplies'), getSupplyById)
+    .put(protect, checkPermission('supplies'), updateSupply)
     .delete(protect, checkPermission('supplies'), deleteSupply);
 
 module.exports = router;
