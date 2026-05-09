@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { getBooks, deleteBook, createBook, updateBook, reset } from '../features/books/bookSlice';
 import { getCategories } from '../features/categories/categorySlice';
 import { getBranches } from '../features/branches/branchSlice';
-import { Plus, Trash2, Edit, X, BookOpen, Check, Search, Filter, Store } from 'lucide-react';
+import { Plus, Trash2, Edit, X, BookOpen, Check, Search, Filter, Store, Eye, EyeOff } from 'lucide-react';
 import type { AppDispatch, RootState } from '../app/store';
 import ImageWithFallback from '../components/ImageWithFallback';
 import BranchFilter from '../components/BranchFilter';
@@ -37,6 +37,7 @@ const Books = () => {
         cashbackAmount: '',
         isBundle: false,
         bundleItems: [] as { product: string, qty: number, title: string }[],
+        isVisible: true,
         branch: '',
     });
     const [isEditMode, setIsEditMode] = useState(false);
@@ -104,6 +105,7 @@ const Books = () => {
             cashbackAmount: '',
             isBundle: false,
             bundleItems: [],
+            isVisible: true,
             branch: selectedBranch || '',
         });
     };
@@ -127,6 +129,7 @@ const Books = () => {
                 barcode: book.barcode || '',
                 cashbackAmount: book.cashbackAmount?.toString() || '',
                 isBundle: book.isBundle || false,
+                isVisible: book.isVisible !== false,
                 bundleItems: book.bundleItems?.map((bi: any) => ({
                     product: bi.product?._id || bi.product,
                     qty: bi.qty,
@@ -170,6 +173,7 @@ const Books = () => {
             summary: formData.summary,
             soldCount: Number(formData.soldCount),
             isNew: formData.isNew,
+            isVisible: formData.isVisible,
             size: formData.size,
             coverType: formData.coverType,
             ageLimit: formData.ageLimit,
@@ -285,6 +289,7 @@ const Books = () => {
                                             </div>
                                             <div className="ml-4">
                                                 <div className="text-sm font-bold text-slate-900 line-clamp-1 max-w-[200px]">
+                                                    {book.isVisible === false && <EyeOff size={12} className="inline mr-1 text-slate-400 relative -top-0.5" />}
                                                     {book.title}
                                                     {book.isBundle && <span className="ml-2 text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full uppercase font-bold tracking-wider relative -top-0.5">Набор</span>}
                                                 </div>
@@ -335,6 +340,13 @@ const Books = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={() => dispatch(updateBook({ id: book._id, bookData: { isVisible: book.isVisible === false } }))}
+                                                className={`p-2 rounded-lg transition-colors ${book.isVisible === false ? 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50' : 'text-emerald-500 hover:text-slate-400 hover:bg-slate-100'}`}
+                                                title={book.isVisible === false ? 'Показать в мобильном' : 'Скрыть из мобильного'}
+                                            >
+                                                {book.isVisible === false ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
                                             <button
                                                 onClick={() => openModal(book)}
                                                 className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors"
@@ -474,6 +486,20 @@ const Books = () => {
                                     />
                                     <label htmlFor="isNew" className="text-sm font-medium text-slate-700 cursor-pointer select-none">
                                         Отметить как "Новинка" (New)
+                                    </label>
+                                </div>
+
+                                <div className={`flex items-center gap-3 p-3 rounded-xl border ${formData.isVisible ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-100 border-slate-300'}`}>
+                                    <input
+                                        type="checkbox"
+                                        id="isVisible"
+                                        checked={formData.isVisible}
+                                        onChange={(e) => setFormData({ ...formData, isVisible: e.target.checked })}
+                                        className="w-5 h-5 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer"
+                                    />
+                                    <label htmlFor="isVisible" className={`text-sm font-bold cursor-pointer select-none flex items-center gap-2 ${formData.isVisible ? 'text-emerald-800' : 'text-slate-500'}`}>
+                                        {formData.isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
+                                        {formData.isVisible ? 'Видно в мобильном приложении' : 'Скрыто из мобильного приложения'}
                                     </label>
                                 </div>
 

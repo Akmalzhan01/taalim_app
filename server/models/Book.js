@@ -34,6 +34,7 @@ const bookSchema = mongoose.Schema({
     ],
     countInStock: { type: Number, required: true, default: 0 }, // Total across all branches
     cashbackAmount: { type: Number, default: 0 },
+    isVisible: { type: Boolean, default: true },
     isBundle: { type: Boolean, default: false },
     bundleItems: [{
         product: { type: mongoose.Schema.Types.ObjectId, ref: 'Book' },

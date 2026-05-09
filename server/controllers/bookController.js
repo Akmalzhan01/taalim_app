@@ -16,6 +16,11 @@ const getBooks = async (req, res) => {
             query.branch = req.user.branch;
         }
 
+        // Mobile clients (no showAll param) get only visible books
+        if (!req.query.showAll) {
+            query.isVisible = true;
+        }
+
         const books = await Book.find(query).populate('branch');
         res.json(books);
     } catch (error) {
@@ -164,7 +169,7 @@ const createBook = async (req, res) => {
 // @route   PUT /api/books/:id
 // @access  Private/Admin
 const updateBook = async (req, res) => {
-    const { title, author, price, description, genres, image, summary, soldCount, isNew, size, coverType, ageLimit, barcode, countInStock, minStockLimit, costPrice, branch } = req.body;
+    const { title, author, price, description, genres, image, summary, soldCount, isNew, isVisible, size, coverType, ageLimit, barcode, countInStock, minStockLimit, costPrice, branch } = req.body;
 
     const book = await Book.findById(req.params.id);
     console.log('updateBook called:', { bodyBranch: branch, userRole: req.user?.role, userIsAdmin: req.user?.isAdmin });
@@ -185,6 +190,7 @@ const updateBook = async (req, res) => {
         book.summary = summary || book.summary;
         book.soldCount = soldCount || book.soldCount;
         book.isNew = isNew !== undefined ? isNew : book.isNew;
+        book.isVisible = isVisible !== undefined ? isVisible : book.isVisible;
         book.size = size || book.size;
         book.coverType = coverType || book.coverType;
         book.ageLimit = ageLimit || book.ageLimit;

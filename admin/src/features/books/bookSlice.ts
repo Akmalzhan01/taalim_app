@@ -13,7 +13,9 @@ const getToken = () => {
 // Async Thunks
 export const getBooks = createAsyncThunk('books/getAll', async (branchId: string | undefined, thunkAPI) => {
     try {
-        const url = branchId ? `${BOOKS_URL}?branch=${branchId}` : BOOKS_URL;
+        const params = new URLSearchParams({ showAll: 'true' });
+        if (branchId) params.set('branch', branchId);
+        const url = `${BOOKS_URL}?${params.toString()}`;
         const response = await axios.get(url);
         return response.data;
     } catch (error: any) {
