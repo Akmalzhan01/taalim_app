@@ -8,7 +8,7 @@ const orderSchema = mongoose.Schema({
     branch: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Branch',
-        required: true,
+        required: false,
     },
     customer: {
         type: mongoose.Schema.Types.ObjectId,
