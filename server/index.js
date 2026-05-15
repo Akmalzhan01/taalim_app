@@ -13,6 +13,7 @@ const supplyRoutes = require('./routes/supplyRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
 const debtRoutes = require('./routes/debtRoutes');
 const cashReceiptRoutes = require('./routes/cashReceiptRoutes');
+const mbankRoutes = require('./routes/mbankRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -70,6 +71,7 @@ app.use('/api/customers', require('./routes/customerRoutes'));
 app.use('/api/vendors', vendorRoutes);
 app.use('/api/debts', debtRoutes);
 app.use('/api/cash-receipts', cashReceiptRoutes);
+app.use('/api/mbank', mbankRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');
