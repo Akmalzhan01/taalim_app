@@ -182,6 +182,22 @@ export const getZReport = createAsyncThunk(
     }
 );
 
+// Cancel order
+export const cancelOrder = createAsyncThunk(
+    'orders/cancel',
+    async (id: string, thunkAPI: any) => {
+        try {
+            const token = getToken(thunkAPI);
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const response = await axios.put(`${ORDERS_URL}/${id}/cancel`, {}, config);
+            return response.data;
+        } catch (error: any) {
+            const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+);
+
 // Create new order (Admin/POS)
 export const createOrderAdmin = createAsyncThunk(
     'orders/createAdmin',
@@ -332,6 +348,11 @@ const orderSlice = createSlice({
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload;
+            })
+            .addCase(cancelOrder.fulfilled, (state, action) => {
+                const idx = state.orders.findIndex((x: any) => x._id === action.payload._id);
+                if (idx !== -1) state.orders[idx] = action.payload as never;
+                state.order = action.payload;
             });
     },
 });

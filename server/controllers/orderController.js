@@ -660,4 +660,20 @@ const getZReport = asyncHandler(async (req, res) => {
     });
 });
 
-module.exports = { addOrderItems, getMyOrders, getOrders, updateOrderToDelivered, getOrderById, getOrdersByUser, getDashboardStats, addOrderAdmin, refundOrder, getZReport };
+const cancelOrder = asyncHandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+        res.status(404);
+        throw new Error('Order not found');
+    }
+    if (order.isPaid) {
+        res.status(400);
+        throw new Error('Cannot cancel a paid order');
+    }
+    order.isCancelled = true;
+    order.cancelledAt = new Date();
+    const updated = await order.save();
+    res.json(updated);
+});
+
+module.exports = { addOrderItems, getMyOrders, getOrders, updateOrderToDelivered, getOrderById, getOrdersByUser, getDashboardStats, addOrderAdmin, refundOrder, getZReport, cancelOrder };

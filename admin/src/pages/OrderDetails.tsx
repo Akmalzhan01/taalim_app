@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getOrderDetails, deliverOrder, getOrdersByUser, refundOrder } from '../features/orders/orderSlice';
-import { Loader, ArrowLeft, MapPin, CreditCard, User, Mail, Calendar, CheckCircle, Package, History, ChevronDown } from 'lucide-react';
+import { getOrderDetails, deliverOrder, getOrdersByUser, refundOrder, cancelOrder } from '../features/orders/orderSlice';
+import { Loader, ArrowLeft, MapPin, CreditCard, User, Mail, Calendar, CheckCircle, Package, History, ChevronDown, XCircle } from 'lucide-react';
 import type { AppDispatch, RootState } from '../app/store';
 import ImageWithFallback from '../components/ImageWithFallback';
 
@@ -43,6 +43,14 @@ const OrderDetails = () => {
         }
     };
 
+    const handleCancel = () => {
+        if (id) {
+            if (window.confirm("Отменить заказ? После отмены оплата через MBank будет невозможна.")) {
+                dispatch(cancelOrder(id));
+            }
+        }
+    };
+
     if (isLoading) return <div className="flex justify-center py-20"><Loader className="animate-spin text-slate-400" /></div>;
     if (isError) return <div className="text-center py-20 text-rose-500">{message}</div>;
 
@@ -61,6 +69,8 @@ const OrderDetails = () => {
         deliveredAt,
         isRefunded,
         refundedAt,
+        isCancelled,
+        cancelledAt,
     } = currentOrder;
 
     return (
@@ -73,6 +83,7 @@ const OrderDetails = () => {
                     <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
                         Заказ #{_id.substring(0, 10)}
                         {isRefunded && <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded inline-flex items-center gap-1"><History size={12} /> Возврат</span>}
+                        {isCancelled && <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded inline-flex items-center gap-1"><XCircle size={12} /> Отменён</span>}
                     </h2>
                     <p className="text-slate-500 text-sm mt-1">Детали и статус заказа</p>
                 </div>
@@ -206,7 +217,11 @@ const OrderDetails = () => {
                                     <p className="font-medium text-slate-900 text-sm leading-relaxed">
                                         {shippingAddress?.address}
                                     </p>
-                                    {isRefunded ? (
+                                    {isCancelled ? (
+                                        <div className="mt-2 text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded inline-flex items-center gap-1">
+                                            <XCircle size={12} /> Отменён {cancelledAt ? new Date(cancelledAt).toLocaleDateString() : ''}
+                                        </div>
+                                    ) : isRefunded ? (
                                         <div className="mt-2 text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded inline-flex items-center gap-1">
                                             <History size={12} /> Возврат {new Date(refundedAt).toLocaleDateString()}
                                         </div>
@@ -248,7 +263,7 @@ const OrderDetails = () => {
                         </div>
 
                         {/* Actions */}
-                        {!isDelivered && !isRefunded && (
+                        {!isDelivered && !isRefunded && !isCancelled && (
                             <div className="pt-4">
                                 <button
                                     onClick={handleDeliver}
@@ -262,7 +277,7 @@ const OrderDetails = () => {
                                 </p>
                             </div>
                         )}
-                        {!isRefunded && (
+                        {!isRefunded && !isCancelled && (
                             <div className="pt-4 border-t border-slate-100">
                                 <button
                                     onClick={handleRefund}
@@ -273,6 +288,20 @@ const OrderDetails = () => {
                                 </button>
                                 <p className="text-xs text-center text-slate-400 mt-3">
                                     Возврат товаров на склад и перерасчет кэшбэка.
+                                </p>
+                            </div>
+                        )}
+                        {!isPaid && !isCancelled && !isRefunded && (
+                            <div className="pt-4 border-t border-slate-100">
+                                <button
+                                    onClick={handleCancel}
+                                    className="w-full bg-slate-50 text-slate-500 font-bold py-3 px-4 rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <XCircle size={18} />
+                                    Отменить заказ
+                                </button>
+                                <p className="text-xs text-center text-slate-400 mt-3">
+                                    Заказ будет деактивирован. Оплата через MBank станет невозможной.
                                 </p>
                             </div>
                         )}
