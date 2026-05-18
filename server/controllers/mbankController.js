@@ -9,13 +9,11 @@ const parseXML = (xmlString) => new Promise((resolve, reject) => {
     });
 });
 
-const buildResponse = (headAttrs, status, msg, errMsg) => {
+const buildResponse = (headAttrs, bodyAttrs) => {
     const builder = new xml2js.Builder({
         rootName: 'XML',
-        xmldec: { version: '1.0', encoding: 'UTF-8' },
+        xmldec: { version: '1.0', encoding: 'utf-8' },
     });
-    const bodyAttrs = { STATUS: status, MSG: msg || '' };
-    if (errMsg) bodyAttrs.ERR_MSG = errMsg;
     return builder.buildObject({
         HEAD: { $: headAttrs },
         BODY: { $: bodyAttrs },
@@ -29,38 +27,49 @@ const handleMBank = asyncHandler(async (req, res) => {
     try {
         parsed = await parseXML(req.body);
     } catch {
-        return res.send(buildResponse({ DTS: '', QM: '0', QID: '0', OP: '' }, 1, '', 'Invalid XML'));
+        return res.send(buildResponse(
+            { DTS: '', QM: '', QID: '', OP: '' },
+            { STATUS: 401, ERR_MSG: 'Неправильный формат запроса' }
+        ));
     }
 
-    // MBank sends <XML><HEAD .../><BODY .../></XML>
     const root = parsed?.XML || parsed?.REQUEST;
     const headEl = root?.HEAD;
     const bodyEl = root?.BODY;
 
     if (!headEl || !bodyEl) {
-        return res.send(buildResponse({ DTS: '', QM: '0', QID: '0', OP: '' }, 1, '', 'Bad request structure'));
+        return res.send(buildResponse(
+            { DTS: '', QM: '', QID: '', OP: '' },
+            { STATUS: 401, ERR_MSG: 'Неправильный формат запроса' }
+        ));
     }
 
-    // Attributes come under '$' key with xml2js
     const headAttrs = headEl.$ || headEl;
     const bodyAttrs = bodyEl.$ || bodyEl;
-
     const op = headAttrs.OP;
     const orderId = bodyAttrs.PARAM1;
 
-    if (op === 'QE10') {
-        const order = await Order.findById(orderId).populate('user', 'name');
-        if (!order) return res.send(buildResponse(headAttrs, 1, '', 'Order not found'));
-        if (order.isPaid) return res.send(buildResponse(headAttrs, 1, '', 'Order already paid'));
-
-        const name = order.user?.name || 'Покупатель';
-        return res.send(buildResponse(headAttrs, 200, name));
-    }
-
+    // QE11 = Проверка платежа (pre-payment check)
     if (op === 'QE11') {
         const order = await Order.findById(orderId);
-        if (!order) return res.send(buildResponse(headAttrs, 1, '', 'Order not found'));
-        if (order.isPaid) return res.send(buildResponse(headAttrs, 200, 'Already confirmed'));
+        if (!order) return res.send(buildResponse(headAttrs, { STATUS: 420, ERR_MSG: 'Лицевой счет не найден' }));
+        if (order.isPaid) return res.send(buildResponse(headAttrs, { STATUS: 420, ERR_MSG: 'Заказ уже оплачен' }));
+        return res.send(buildResponse(headAttrs, { STATUS: 200 }));
+    }
+
+    // QE10 = Проведение платежа (payment execution)
+    if (op === 'QE10') {
+        const order = await Order.findById(orderId);
+        if (!order) return res.send(buildResponse(headAttrs, { STATUS: 420, ERR_MSG: 'Лицевой счет не найден' }));
+
+        if (order.isPaid) {
+            // Same QID = idempotent (repeat request)
+            if (order.paymentResult?.id === headAttrs.QID) {
+                return res.send(buildResponse(headAttrs, { STATUS: 250, MSG: 'Платеж проведен' }));
+            }
+            // Different QID = duplicate payment attempt
+            return res.send(buildResponse(headAttrs, { STATUS: 421, ERR_MSG: 'Дублирование платежа' }));
+        }
 
         order.isPaid = true;
         order.paidAt = new Date();
@@ -71,22 +80,23 @@ const handleMBank = asyncHandler(async (req, res) => {
             email_address: 'mbank',
         };
         await order.save();
-        return res.send(buildResponse(headAttrs, 200, 'Payment confirmed'));
+        return res.send(buildResponse(headAttrs, { STATUS: 250, MSG: 'Платеж проведен' }));
     }
 
+    // PR09 = Отмена платежа (cancel payment)
     if (op === 'PR09') {
         const order = await Order.findById(orderId);
-        if (!order) return res.send(buildResponse(headAttrs, 1, '', 'Order not found'));
-        if (order.isDelivered) return res.send(buildResponse(headAttrs, 1, '', 'Order already delivered'));
+        if (!order) return res.send(buildResponse(headAttrs, { STATUS: 420, ERR_MSG: 'Лицевой счет не найден' }));
+        if (order.isDelivered) return res.send(buildResponse(headAttrs, { STATUS: 420, ERR_MSG: 'Отмена невозможна, заказ уже доставлен' }));
 
         order.isPaid = false;
         order.paidAt = undefined;
         order.paymentResult = undefined;
         await order.save();
-        return res.send(buildResponse(headAttrs, 200, 'Cancelled'));
+        return res.send(buildResponse(headAttrs, { STATUS: 250, ERR_MSG: 'Платеж успешно отменен' }));
     }
 
-    return res.send(buildResponse(headAttrs, 1, '', 'Unknown operation'));
+    return res.send(buildResponse(headAttrs, { STATUS: 401, ERR_MSG: 'Неправильный формат запроса' }));
 });
 
 module.exports = { handleMBank };
