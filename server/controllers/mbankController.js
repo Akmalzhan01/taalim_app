@@ -54,13 +54,13 @@ const handleMBank = asyncHandler(async (req, res) => {
         if (order.isPaid) return res.send(buildResponse(headAttrs, 1, '', 'Order already paid'));
 
         const name = order.user?.name || 'Покупатель';
-        return res.send(buildResponse(headAttrs, 0, name));
+        return res.send(buildResponse(headAttrs, 200, name));
     }
 
     if (op === 'QE11') {
         const order = await Order.findById(orderId);
         if (!order) return res.send(buildResponse(headAttrs, 1, '', 'Order not found'));
-        if (order.isPaid) return res.send(buildResponse(headAttrs, 0, 'Already confirmed'));
+        if (order.isPaid) return res.send(buildResponse(headAttrs, 200, 'Already confirmed'));
 
         order.isPaid = true;
         order.paidAt = new Date();
@@ -71,7 +71,7 @@ const handleMBank = asyncHandler(async (req, res) => {
             email_address: 'mbank',
         };
         await order.save();
-        return res.send(buildResponse(headAttrs, 0, 'Payment confirmed'));
+        return res.send(buildResponse(headAttrs, 200, 'Payment confirmed'));
     }
 
     if (op === 'PR09') {
@@ -83,7 +83,7 @@ const handleMBank = asyncHandler(async (req, res) => {
         order.paidAt = undefined;
         order.paymentResult = undefined;
         await order.save();
-        return res.send(buildResponse(headAttrs, 0, 'Cancelled'));
+        return res.send(buildResponse(headAttrs, 200, 'Cancelled'));
     }
 
     return res.send(buildResponse(headAttrs, 1, '', 'Unknown operation'));
