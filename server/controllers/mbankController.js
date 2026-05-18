@@ -14,11 +14,11 @@ const buildResponse = (headAttrs, status, msg, errMsg) => {
         rootName: 'RESPONSE',
         xmldec: { version: '1.0', encoding: 'UTF-8' },
     });
-    const body = { STATUS: status, MSG: msg || '' };
-    if (errMsg) body.ERR_MSG = errMsg;
+    const bodyAttrs = { STATUS: status, MSG: msg || '' };
+    if (errMsg) bodyAttrs.ERR_MSG = errMsg;
     return builder.buildObject({
         HEAD: { $: headAttrs },
-        BODY: body,
+        BODY: { $: bodyAttrs },
     });
 };
 
