@@ -11,7 +11,7 @@ const parseXML = (xmlString) => new Promise((resolve, reject) => {
 
 const buildResponse = (headAttrs, status, msg, errMsg) => {
     const builder = new xml2js.Builder({
-        rootName: 'RESPONSE',
+        rootName: 'XML',
         xmldec: { version: '1.0', encoding: 'UTF-8' },
     });
     const bodyAttrs = { STATUS: status, MSG: msg || '' };
