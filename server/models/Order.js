@@ -54,6 +54,8 @@ const orderSchema = mongoose.Schema({
     deliveredAt: { type: Date },
     isRefunded: { type: Boolean, required: true, default: false },
     refundedAt: { type: Date },
+    isCancelled: { type: Boolean, required: true, default: false },
+    cancelledAt: { type: Date },
     comment: { type: String }, // User's custom note
 }, {
     timestamps: true,

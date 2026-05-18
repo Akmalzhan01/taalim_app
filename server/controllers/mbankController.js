@@ -66,6 +66,7 @@ const handleMBank = asyncHandler(async (req, res) => {
     if (op === 'QE10') {
         const order = await Order.findById(orderId);
         if (!order) return res.send(buildResponse(headAttrs, { STATUS: 420, ERR_MSG: 'Лицевой счет не найден' }));
+        if (order.isCancelled) return res.send(buildResponse(headAttrs, { STATUS: 401, ERR_MSG: 'Реквизит деактивирован' }));
 
         if (order.isPaid) {
             // Same QID = idempotent (repeat request)
