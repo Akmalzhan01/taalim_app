@@ -48,12 +48,17 @@ const handleMBank = asyncHandler(async (req, res) => {
     const bodyAttrs = bodyEl.$ || bodyEl;
     const op = headAttrs.OP;
     const orderId = bodyAttrs.PARAM1;
+    const serviceId = bodyAttrs.SERVICE_ID;
+
+    if (serviceId !== '789') {
+        return res.send(buildResponse(headAttrs, { STATUS: 401, ERR_MSG: 'Неправильный формат запроса' }));
+    }
 
     // QE11 = Проверка платежа (pre-payment check)
     if (op === 'QE11') {
         const order = await Order.findById(orderId);
         if (!order) return res.send(buildResponse(headAttrs, { STATUS: 420, ERR_MSG: 'Лицевой счет не найден' }));
-        if (order.isPaid) return res.send(buildResponse(headAttrs, { STATUS: 420, ERR_MSG: 'Заказ уже оплачен' }));
+        if (order.isPaid) return res.send(buildResponse(headAttrs, { STATUS: 421, ERR_MSG: 'Дублирование платежа' }));
         return res.send(buildResponse(headAttrs, { STATUS: 200 }));
     }
 
