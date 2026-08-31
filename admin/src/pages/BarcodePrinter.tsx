@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { getBooks } from '../features/books/bookSlice';
+import { getAllBooks } from '../features/books/bookSlice';
 import { Search, Printer } from 'lucide-react';
 import type { AppDispatch, RootState } from '../app/store';
 import Barcode from 'react-barcode';
@@ -9,17 +9,17 @@ import ImageWithFallback from '../components/ImageWithFallback';
 
 const BarcodePrinter = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const { books, isLoading } = useSelector((state: RootState) => state.books);
+    const { allBooks, isLoading } = useSelector((state: RootState) => state.books);
     const { settings } = useSelector((state: RootState) => state.settings);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedBooks, setSelectedBooks] = useState<Record<string, number>>({});
 
     useEffect(() => {
-        dispatch(getBooks());
+        dispatch(getAllBooks(undefined));
     }, [dispatch]);
 
-    const filteredBooks = books.filter((book: any) =>
+    const filteredBooks = allBooks.filter((book: any) =>
         book.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -56,7 +56,7 @@ const BarcodePrinter = () => {
     // Array of elements to print
     const printItems: any[] = [];
     Object.entries(selectedBooks).forEach(([bookId, qty]) => {
-        const book = books.find((b: any) => b._id === bookId);
+        const book = allBooks.find((b: any) => b._id === bookId);
         if (book) {
             for (let i = 0; i < qty; i++) {
                 printItems.push(book);

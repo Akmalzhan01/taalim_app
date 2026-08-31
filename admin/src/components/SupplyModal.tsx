@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { X, Search, Plus, Trash2, Package, Check, BookPlus, Loader2, Truck, CreditCard } from 'lucide-react';
-import { getBooks, createBook } from '../features/books/bookSlice';
+import { getAllBooks, createBook } from '../features/books/bookSlice';
 import { getCategories } from '../features/categories/categorySlice';
 import { createSupply, updateSupply } from '../features/supplies/supplySlice';
 import { getVendors } from '../features/vendors/vendorSlice';
@@ -17,7 +17,7 @@ interface SupplyModalProps {
 
 const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose, supplyToEdit }) => {
     const dispatch = useDispatch<AppDispatch>();
-    const { books } = useSelector((state: RootState) => state.books);
+    const { allBooks } = useSelector((state: RootState) => state.books);
     const { categories } = useSelector((state: RootState) => state.categories);
     const { isLoading: isSupplyLoading } = useSelector((state: RootState) => state.supplies);
     const { vendors } = useSelector((state: RootState) => state.vendors);
@@ -56,7 +56,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose, supplyToEdit
 
     useEffect(() => {
         if (isOpen) {
-            dispatch(getBooks(selectedBranch));
+            dispatch(getAllBooks(selectedBranch));
             dispatch(getCategories());
             dispatch(getVendors());
             if (supplyToEdit) {
@@ -83,7 +83,7 @@ const SupplyModal: React.FC<SupplyModalProps> = ({ isOpen, onClose, supplyToEdit
         }
     }, [isOpen, dispatch, selectedBranch, supplyToEdit]);
 
-    const filteredBooks = books.filter((book: any) =>
+    const filteredBooks = allBooks.filter((book: any) =>
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (book.author && book.author.toLowerCase().includes(searchTerm.toLowerCase()))
     ).slice(0, 5);

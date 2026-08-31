@@ -21,8 +21,59 @@ const getBooks = async (req, res) => {
             query.isVisible = true;
         }
 
-        const books = await Book.find(query).populate('branch');
-        res.json(books);
+        if (req.query.search) {
+            const escaped = String(req.query.search).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pattern = new RegExp(escaped, 'i');
+            query.$or = [{ title: pattern }, { author: pattern }, { barcode: pattern }];
+        }
+
+        // Barcode scanner lookup: exact barcode, or an id ending with the code
+        if (req.query.code) {
+            const escaped = String(req.query.code).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            query.$or = [
+                { barcode: new RegExp(`^${escaped}$`, 'i') },
+                { $expr: { $regexMatch: { input: { $toString: '$_id' }, regex: `${escaped}$`, options: 'i' } } }
+            ];
+        }
+
+        if (req.query.category && req.query.category !== 'all') {
+            query.genres = req.query.category;
+        }
+
+        if (req.query.stock === 'in') {
+            query.countInStock = { $gt: 0 };
+        } else if (req.query.stock === 'out') {
+            query.countInStock = { $lte: 0 };
+        }
+
+        // Callers that ask for a page get a page; everyone else (the mobile app)
+        // keeps receiving the plain array they already expect.
+        const wantsPage = req.query.page !== undefined || req.query.limit !== undefined;
+        if (!wantsPage) {
+            const books = await Book.find(query).populate('branch');
+            return res.json(books);
+        }
+
+        const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
+        const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+        // Paging needs a deterministic order; the POS grid wants stock first
+        const sort = req.query.sort === 'stock'
+            ? { countInStock: -1, title: 1 }
+            : { createdAt: -1, _id: -1 };
+
+        const total = await Book.countDocuments(query);
+        const books = await Book.find(query)
+            .populate('branch')
+            .sort(sort)
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        res.json({
+            books,
+            page,
+            pages: Math.max(Math.ceil(total / limit), 1),
+            total
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
     }

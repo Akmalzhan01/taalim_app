@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { getBooks, deleteBook, createBook, updateBook, reset } from '../features/books/bookSlice';
+import { getBooks, getAllBooks, deleteBook, createBook, updateBook, reset } from '../features/books/bookSlice';
 import { getCategories } from '../features/categories/categorySlice';
 import { getBranches } from '../features/branches/branchSlice';
 import { Plus, Trash2, Edit, X, BookOpen, Check, Search, Filter, Store, Eye, EyeOff } from 'lucide-react';
 import type { AppDispatch, RootState } from '../app/store';
 import ImageWithFallback from '../components/ImageWithFallback';
 import BranchFilter from '../components/BranchFilter';
+import Pagination from '../components/Pagination';
+
+const PAGE_SIZE = 20;
 
 const Books = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const { books, isLoading, isError, message } = useSelector(
+    const { books, allBooks, pages, total, isLoading, isError, message } = useSelector(
         (state: RootState) => state.books
     );
     const { categories } = useSelector((state: RootState) => state.categories);
@@ -70,19 +73,53 @@ const Books = () => {
         }
     };
 
+    const [page, setPage] = useState(1);
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    // Typing should not fire one request per keystroke
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Any change of filter starts reading from the first page again
+    useEffect(() => {
+        setPage(1);
+    }, [debouncedSearch, categoryFilter, selectedBranch]);
+
+    const loadBooks = useCallback(() => {
+        dispatch(getBooks({
+            branch: selectedBranch,
+            page,
+            limit: PAGE_SIZE,
+            search: debouncedSearch,
+            category: categoryFilter
+        }));
+    }, [dispatch, selectedBranch, page, debouncedSearch, categoryFilter]);
+
+    useEffect(() => { loadBooks(); }, [loadBooks]);
+
+    // Deleting the last row of the last page must not strand us on an empty one
+    useEffect(() => {
+        if (page > pages) setPage(pages);
+    }, [page, pages]);
+
     useEffect(() => {
         if (isError) {
             alert(message);
         }
-        dispatch(getBooks(selectedBranch));
+    }, [isError, message]);
+
+    useEffect(() => {
         dispatch(getCategories());
         dispatch(getBranches()); // Fetch branches for the UI
         return () => { dispatch(reset()); };
-    }, [isError, message, dispatch, selectedBranch]);
+    }, [dispatch]);
 
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         if (window.confirm('Are you sure you want to delete this book?')) {
-            dispatch(deleteBook(id));
+            await dispatch(deleteBook(id));
+            loadBooks();
         }
     };
 
@@ -111,6 +148,8 @@ const Books = () => {
     };
 
     const openModal = (book?: any) => {
+        // The bundle picker needs every book, not just the page on screen
+        dispatch(getAllBooks(selectedBranch));
         if (book) {
             setFormData({
                 id: book._id,
@@ -161,7 +200,7 @@ const Books = () => {
         });
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const bookData = {
             title: formData.title,
@@ -188,28 +227,14 @@ const Books = () => {
             branch: formData.branch || selectedBranch,
         };
 
-        if (isEditMode) {
-            dispatch(updateBook({ id: formData.id, bookData }));
-        } else {
-            dispatch(createBook(bookData));
-        }
         setIsModalOpen(false);
-    };
-
-    const filteredBooks = books.filter((book: any) => {
-        const matchesSearch =
-            book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (book.author && book.author.toLowerCase().includes(searchTerm.toLowerCase()));
-
-        let matchesCategory = true;
-        if (categoryFilter !== 'all') {
-            matchesCategory = book.genres && book.genres.includes(categoryFilter);
+        if (isEditMode) {
+            await dispatch(updateBook({ id: formData.id, bookData }));
+        } else {
+            await dispatch(createBook(bookData));
         }
-
-        return matchesSearch && matchesCategory;
-    });
-
-    if (isLoading) return <div className="flex items-center justify-center min-h-[400px] text-slate-500 font-medium animate-pulse">Загрузка книг...</div>;
+        loadBooks();
+    };
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -271,7 +296,12 @@ const Books = () => {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-slate-5">
-                            {filteredBooks.map((book: any) => (
+                            {isLoading && (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-16 text-center text-slate-500 font-medium animate-pulse">Загрузка книг...</td>
+                                </tr>
+                            )}
+                            {!isLoading && books.map((book: any) => (
                                 <tr key={book._id} className="hover:bg-slate-50/80 transition-colors group">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
@@ -366,7 +396,7 @@ const Books = () => {
                                     </td>
                                 </tr>
                             ))}
-                            {filteredBooks.length === 0 && (
+                            {!isLoading && books.length === 0 && (
                                 <tr>
                                     <td colSpan={7} className="px-6 py-16 text-center">
                                         <div className="flex flex-col items-center justify-center text-slate-400">
@@ -382,6 +412,15 @@ const Books = () => {
                         </tbody>
                     </table>
                 </div>
+
+                <Pagination
+                    page={page}
+                    pages={pages}
+                    total={total}
+                    limit={PAGE_SIZE}
+                    onChange={setPage}
+                    itemLabel="книг"
+                />
             </div>
 
             {/* Modal */}
@@ -528,7 +567,7 @@ const Books = () => {
                                                 className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-purple-500"
                                             >
                                                 <option value="">Выберите книгу...</option>
-                                                {books.filter((b: any) => !b.isBundle).map((b: any) => (
+                                                {(allBooks as any[]).filter((b: any) => !b.isBundle).map((b: any) => (
                                                     <option key={b._id} value={b._id}>{b.title} ({b.price} с)</option>
                                                 ))}
                                             </select>

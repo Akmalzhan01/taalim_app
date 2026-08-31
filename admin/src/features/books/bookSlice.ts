@@ -10,13 +10,47 @@ const getToken = () => {
     return user?.token;
 };
 
+export interface BookQuery {
+    branch?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+    category?: string;
+    stock?: 'all' | 'in' | 'out';
+    sort?: string;
+}
+
+const buildParams = (arg: string | BookQuery | undefined) => {
+    const params = new URLSearchParams({ showAll: 'true' });
+    const query: BookQuery = typeof arg === 'string' || arg === undefined ? { branch: arg } : arg;
+
+    if (query.branch) params.set('branch', query.branch);
+    if (query.page) params.set('page', String(query.page));
+    if (query.limit) params.set('limit', String(query.limit));
+    if (query.search) params.set('search', query.search);
+    if (query.category && query.category !== 'all') params.set('category', query.category);
+    if (query.stock && query.stock !== 'all') params.set('stock', query.stock);
+    if (query.sort) params.set('sort', query.sort);
+
+    return params;
+};
+
 // Async Thunks
-export const getBooks = createAsyncThunk('books/getAll', async (branchId: string | undefined, thunkAPI) => {
+// Pass a page/limit for a paginated slice, or just a branch id for the whole list.
+export const getBooks = createAsyncThunk('books/getAll', async (arg: string | BookQuery | undefined, thunkAPI) => {
     try {
-        const params = new URLSearchParams({ showAll: 'true' });
-        if (branchId) params.set('branch', branchId);
-        const url = `${BOOKS_URL}?${params.toString()}`;
-        const response = await axios.get(url);
+        const response = await axios.get(`${BOOKS_URL}?${buildParams(arg).toString()}`);
+        return response.data;
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message;
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+// Unpaginated list for pickers (bundle contents, supply items) that need every book.
+export const getAllBooks = createAsyncThunk('books/getAllUnpaged', async (branchId: string | undefined, thunkAPI) => {
+    try {
+        const response = await axios.get(`${BOOKS_URL}?${buildParams(branchId).toString()}`);
         return response.data;
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message;
@@ -69,7 +103,11 @@ export const deleteBook = createAsyncThunk('books/delete', async (id: string, th
 const bookSlice = createSlice({
     name: 'books',
     initialState: {
-        books: [],
+        books: [] as any[],
+        allBooks: [] as any[],
+        page: 1,
+        pages: 1,
+        total: 0,
         isLoading: false,
         isError: false,
         isSuccess: false,
@@ -89,7 +127,21 @@ const bookSlice = createSlice({
             .addCase(getBooks.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isSuccess = true;
-                state.books = action.payload;
+                const payload = action.payload;
+                if (Array.isArray(payload)) {
+                    state.books = payload;
+                    state.page = 1;
+                    state.pages = 1;
+                    state.total = payload.length;
+                } else {
+                    state.books = payload.books;
+                    state.page = payload.page;
+                    state.pages = payload.pages;
+                    state.total = payload.total;
+                }
+            })
+            .addCase(getAllBooks.fulfilled, (state, action) => {
+                state.allBooks = action.payload;
             })
             .addCase(getBooks.rejected, (state, action) => {
                 state.isLoading = false;

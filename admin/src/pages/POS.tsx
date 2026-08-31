@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import axios from 'axios';
 import { getBooks } from '../features/books/bookSlice';
+import { API_URL } from '../config/constants';
 import { createOrderAdmin, reset, getZReport } from '../features/orders/orderSlice';
 import { getSettings } from '../features/settings/settingSlice';
 import { getBranches } from '../features/branches/branchSlice';
@@ -12,12 +14,15 @@ import ExpenseModal from '../components/ExpenseModal';
 import { ShoppingCart, Search, Trash2, CreditCard, Banknote, Plus, Minus, CheckCircle, Printer, X, Clock, Pause, TrendingDown, Monitor, UserPlus, Phone, User as UserIcon } from 'lucide-react';
 import type { AppDispatch, RootState } from '../app/store';
 import ImageWithFallback from '../components/ImageWithFallback';
+import Pagination from '../components/Pagination';
 import Receipt from '../components/Receipt';
 import { useReactToPrint } from 'react-to-print';
 
+const PAGE_SIZE = 24;
+
 const POS = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const { books } = useSelector((state: RootState) => state.books);
+    const { books, pages, total: totalBooks, isLoading } = useSelector((state: RootState) => state.books);
     const { isSuccess, isError, message, zReport } = useSelector((state: RootState) => state.orderList);
     const { selectedBranch, branches } = useSelector((state: RootState) => state.branches);
     const { banners } = useSelector((state: RootState) => state.banners);
@@ -48,6 +53,8 @@ const POS = () => {
         window.open('/pos-customer', '_blank', 'width=1200,height=800,menubar=no,toolbar=no,location=no');
     };
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState('Cash'); // Cash or Card
     const [stockFilter, setStockFilter] = useState('in'); // 'all', 'in', 'out'
     const [isOrderProcessing, setIsOrderProcessing] = useState(false);
@@ -111,13 +118,41 @@ const POS = () => {
 
     useEffect(() => {
         dispatch(getBranches());
-        dispatch(getBooks(selectedBranch));
         dispatch(getSettings());
         dispatch(getBanners());
         dispatch(getCustomers());
         dispatch(reset()); // Reset state on mount to avoid stale alerts
         return () => { dispatch(reset()); };
     }, [dispatch, selectedBranch]);
+
+    // Typing should not fire one request per keystroke
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Any change of filter starts reading from the first page again
+    useEffect(() => {
+        setPage(1);
+    }, [debouncedSearch, stockFilter, selectedBranch]);
+
+    const loadBooks = useCallback(() => {
+        dispatch(getBooks({
+            branch: selectedBranch,
+            page,
+            limit: PAGE_SIZE,
+            search: debouncedSearch,
+            stock: stockFilter as 'all' | 'in' | 'out',
+            sort: 'stock'
+        }));
+    }, [dispatch, selectedBranch, page, debouncedSearch, stockFilter]);
+
+    useEffect(() => { loadBooks(); }, [loadBooks]);
+
+    // A sale that empties the last page must not strand us on an empty one
+    useEffect(() => {
+        if (page > pages) setPage(pages);
+    }, [page, pages]);
 
     useEffect(() => {
         localStorage.setItem('heldCarts', JSON.stringify(heldCarts));
@@ -183,7 +218,7 @@ const POS = () => {
         setCart([]);
         setReceiptData(null);
         setManualDiscount(0);
-        dispatch(getBooks(selectedBranch)); // Refresh stock
+        loadBooks(); // Refresh stock
     };
 
     const handleHoldCart = () => {
@@ -270,6 +305,21 @@ const POS = () => {
     const barcodeBuffer = useRef('');
     const lastKeyTime = useRef(Date.now());
 
+    // The scanned book is often not on the page being shown, so fall back to the server
+    const findBookByCode = useCallback(async (code: string) => {
+        const matches = (b: any) =>
+            (b.barcode && b.barcode.toUpperCase() === code) || b._id.toUpperCase().endsWith(code);
+
+        const onPage = (books as any[]).find(matches);
+        if (onPage) return onPage;
+
+        const params = new URLSearchParams({ showAll: 'true', code });
+        if (selectedBranch) params.set('branch', selectedBranch);
+        const { data } = await axios.get(`${API_URL}/books?${params.toString()}`);
+        const results = Array.isArray(data) ? data : data.books;
+        return results.find(matches) || null;
+    }, [books, selectedBranch]);
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const currentTime = Date.now();
@@ -284,16 +334,15 @@ const POS = () => {
                     // Possible barcode scan
                     const scannedCode = barcodeBuffer.current.toUpperCase();
 
-                    const foundBook = books.find((b: any) =>
-                        (b.barcode && b.barcode.toUpperCase() === scannedCode) ||
-                        b._id.toUpperCase().endsWith(scannedCode)
-                    );
-
-                    if (foundBook) {
-                        addToCart(foundBook);
-                    } else {
-                        alert(`Товар со штрих-кодом ${scannedCode} не найден`);
-                    }
+                    findBookByCode(scannedCode)
+                        .then((foundBook) => {
+                            if (foundBook) {
+                                addToCart(foundBook);
+                            } else {
+                                alert(`Товар со штрих-кодом ${scannedCode} не найден`);
+                            }
+                        })
+                        .catch(() => alert(`Не удалось найти товар со штрих-кодом ${scannedCode}`));
 
                     barcodeBuffer.current = '';
 
@@ -314,7 +363,7 @@ const POS = () => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [books, cart]);
+    }, [findBookByCode, cart]);
 
     const subtotal = cart.reduce((acc, item) => acc + item.qty * item.price, 0);
     const tax = 0; // 0% tax for now
@@ -344,18 +393,8 @@ const POS = () => {
         dispatch(createOrderAdmin(orderData));
     };
 
-    const filteredBooks = books
-        .filter((book: any) => book.title.toLowerCase().includes(searchTerm.toLowerCase()))
-        .filter((book: any) => {
-            if (stockFilter === 'in') return book.countInStock > 0;
-            if (stockFilter === 'out') return book.countInStock === 0;
-            return true;
-        })
-        .sort((a: any, b: any) => {
-            if (a.countInStock > 0 && b.countInStock === 0) return -1;
-            if (a.countInStock === 0 && b.countInStock > 0) return 1;
-            return 0;
-        });
+    // Search, stock filter, ordering and paging all happen on the server now
+    const filteredBooks = books as any[];
 
     return (
         <div className="flex h-[calc(100vh-80px)] gap-4 animate-in fade-in zoom-in duration-300 p-2">
@@ -414,6 +453,12 @@ const POS = () => {
 
                 {/* Product Grid */}
                 <div className="flex-1 overflow-y-auto p-3 bg-slate-50/50">
+                    {isLoading && (
+                        <p className="py-10 text-center text-sm font-medium text-slate-400 animate-pulse">Загрузка товаров...</p>
+                    )}
+                    {!isLoading && filteredBooks.length === 0 && (
+                        <p className="py-10 text-center text-sm font-medium text-slate-400">Товары не найдены</p>
+                    )}
                     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                         {filteredBooks.map((book: any) => (
                             <div
@@ -466,6 +511,16 @@ const POS = () => {
                         ))}
                     </div>
                 </div>
+
+                <Pagination
+                    page={page}
+                    pages={pages}
+                    total={totalBooks}
+                    limit={PAGE_SIZE}
+                    onChange={setPage}
+                    itemLabel="товаров"
+                    compact
+                />
             </div>
 
             {/* Right: Cart & Checkout Sidebar */}
