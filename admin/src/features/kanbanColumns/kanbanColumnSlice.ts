@@ -1,7 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { API_URL } from '../../config/constants';
 
-const API_URL = '/api/kanban-columns/';
+const COLUMNS_URL = `${API_URL}/kanban-columns/`;
 
 interface KanbanColumnState {
     columns: any[];
@@ -24,7 +25,7 @@ export const createKanbanColumn = createAsyncThunk('kanbanColumns/create', async
     try {
         const token = thunkAPI.getState().auth.user.token;
         const config = { headers: { Authorization: `Bearer ${token}` } };
-        const response = await axios.post(API_URL, columnData, config);
+        const response = await axios.post(COLUMNS_URL, columnData, config);
         return response.data;
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
@@ -40,7 +41,7 @@ export const getKanbanColumns = createAsyncThunk('kanbanColumns/getAll', async (
             headers: { Authorization: `Bearer ${token}` },
             params: { branch: branchId }
         };
-        const response = await axios.get(API_URL, config);
+        const response = await axios.get(COLUMNS_URL, config);
         return response.data;
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
@@ -54,7 +55,7 @@ export const updateKanbanColumn = createAsyncThunk('kanbanColumns/update', async
         const token = thunkAPI.getState().auth.user.token;
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const { id, ...data } = columnData;
-        const response = await axios.put(API_URL + id, data, config);
+        const response = await axios.put(COLUMNS_URL + id, data, config);
         return response.data;
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
@@ -67,7 +68,7 @@ export const deleteKanbanColumn = createAsyncThunk('kanbanColumns/delete', async
     try {
         const token = thunkAPI.getState().auth.user.token;
         const config = { headers: { Authorization: `Bearer ${token}` } };
-        await axios.delete(API_URL + id, config);
+        await axios.delete(COLUMNS_URL + id, config);
         return id;
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
@@ -80,7 +81,7 @@ export const reorderKanbanColumns = createAsyncThunk('kanbanColumns/reorder', as
     try {
         const token = thunkAPI.getState().auth.user.token;
         const config = { headers: { Authorization: `Bearer ${token}` } };
-        await axios.put(API_URL + 'reorder', { items }, config);
+        await axios.put(COLUMNS_URL + 'reorder', { items }, config);
         return items;
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();

@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const KanbanColumn = require('../models/KanbanColumn');
 const Task = require('../models/Task');
+const { resolveBranchForCreate } = require('../utils/resolveBranch');
 
 // @desc    Get all columns
 // @route   GET /api/kanban-columns
@@ -24,11 +25,17 @@ const getColumns = asyncHandler(async (req, res) => {
 const createColumn = asyncHandler(async (req, res) => {
     const { title, color } = req.body;
 
+    const branch = await resolveBranchForCreate(req);
+    if (!branch) {
+        res.status(400);
+        throw new Error('Выберите филиал, чтобы создать колонку');
+    }
+
     const column = new KanbanColumn({
         title,
         color: color || 'slate',
-        branch: req.user.branch,
-        order: await KanbanColumn.countDocuments({ branch: req.user.branch })
+        branch,
+        order: await KanbanColumn.countDocuments({ branch })
     });
 
     const createdColumn = await column.save();
@@ -46,8 +53,8 @@ const updateColumn = asyncHandler(async (req, res) => {
     if (column) {
         // Branch Isolation Check
         if (req.user.role !== 'superadmin' && !req.user.isAdmin) {
-            const userBranch = (req.user.branch._id || req.user.branch).toString();
-            if (!column.branch || column.branch.toString() !== userBranch) {
+            const userBranch = req.user.branch ? String(req.user.branch._id || req.user.branch) : null;
+            if (!userBranch || !column.branch || column.branch.toString() !== userBranch) {
                 res.status(403);
                 throw new Error('Not authorized to update this column from another branch');
             }
@@ -76,8 +83,8 @@ const deleteColumn = asyncHandler(async (req, res) => {
     if (column) {
         // Branch Isolation Check
         if (req.user.role !== 'superadmin' && !req.user.isAdmin) {
-            const userBranch = (req.user.branch._id || req.user.branch).toString();
-            if (!column.branch || column.branch.toString() !== userBranch) {
+            const userBranch = req.user.branch ? String(req.user.branch._id || req.user.branch) : null;
+            if (!userBranch || !column.branch || column.branch.toString() !== userBranch) {
                 res.status(403);
                 throw new Error('Not authorized to delete this column from another branch');
             }

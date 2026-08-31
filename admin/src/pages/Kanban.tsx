@@ -10,9 +10,11 @@ import BranchFilter from '../components/BranchFilter';
 
 const Kanban = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const { tasks } = useSelector((state: RootState) => state.tasks);
-    const { columns: dbColumns } = useSelector((state: RootState) => state.kanbanColumns);
+    const { tasks, isError: tasksError, message: tasksMessage } = useSelector((state: RootState) => state.tasks);
+    const { columns: dbColumns, isError: columnsError, message: columnsMessage } = useSelector((state: RootState) => state.kanbanColumns);
     const { selectedBranch } = useSelector((state: RootState) => state.branches);
+
+    const errorMessage = (columnsError && columnsMessage) || (tasksError && tasksMessage) || '';
 
     // Internal state mapping columnId -> { title, color, items }
     const [columns, setColumns] = useState<any>({});
@@ -186,7 +188,7 @@ const Kanban = () => {
         if (editTask) {
             dispatch(updateTask({ id: editTask._id, ...taskFormData }));
         } else {
-            dispatch(createTask(taskFormData));
+            dispatch(createTask({ ...taskFormData, branch: selectedBranch || undefined }));
         }
         setIsTaskModalOpen(false);
     };
@@ -221,7 +223,7 @@ const Kanban = () => {
         if (editColumn) {
             dispatch(updateKanbanColumn({ id: editColumn._id, ...colFormData }));
         } else {
-            dispatch(createKanbanColumn(colFormData));
+            dispatch(createKanbanColumn({ ...colFormData, branch: selectedBranch || undefined }));
         }
         setIsColumnModalOpen(false);
     };
@@ -298,6 +300,12 @@ const Kanban = () => {
                     </button>
                 </div>
             </div>
+
+            {errorMessage && (
+                <div className="bg-rose-50 border border-rose-100 text-rose-700 px-5 py-3.5 rounded-2xl text-sm font-semibold">
+                    {errorMessage}
+                </div>
+            )}
 
             {(!Array.isArray(dbColumns) || dbColumns.length === 0) ? (
                 <div className="flex-1 flex flex-col items-center justify-center py-20 bg-white/40 backdrop-blur-md rounded-3xl border border-slate-200 border-dashed">

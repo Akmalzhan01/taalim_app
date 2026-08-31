@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Task = require('../models/Task');
+const { resolveBranchForCreate } = require('../utils/resolveBranch');
 
 // @desc    Get all tasks
 // @route   GET /api/tasks
@@ -23,14 +24,20 @@ const getTasks = asyncHandler(async (req, res) => {
 const createTask = asyncHandler(async (req, res) => {
     const { title, description, status, priority, dueDate } = req.body;
 
+    const branch = await resolveBranchForCreate(req);
+    if (!branch) {
+        res.status(400);
+        throw new Error('Выберите филиал, чтобы создать задачу');
+    }
+
     const task = new Task({
         title,
         description,
         status: status || 'todo',
         priority: priority || 'medium',
         dueDate,
-        branch: req.user.branch,
-        order: await Task.countDocuments({ status: status || 'todo', branch: req.user.branch })
+        branch,
+        order: await Task.countDocuments({ status: status || 'todo', branch })
     });
 
     const createdTask = await task.save();
@@ -48,8 +55,8 @@ const updateTask = asyncHandler(async (req, res) => {
     if (task) {
         // Branch Isolation Check
         if (req.user.role !== 'superadmin' && !req.user.isAdmin) {
-            const userBranch = (req.user.branch._id || req.user.branch).toString();
-            if (!task.branch || task.branch.toString() !== userBranch) {
+            const userBranch = req.user.branch ? String(req.user.branch._id || req.user.branch) : null;
+            if (!userBranch || !task.branch || task.branch.toString() !== userBranch) {
                 res.status(403);
                 throw new Error('Not authorized to update this task from another branch');
             }
@@ -101,8 +108,8 @@ const deleteTask = asyncHandler(async (req, res) => {
     if (task) {
         // Branch Isolation Check
         if (req.user.role !== 'superadmin' && !req.user.isAdmin) {
-            const userBranch = (req.user.branch._id || req.user.branch).toString();
-            if (!task.branch || task.branch.toString() !== userBranch) {
+            const userBranch = req.user.branch ? String(req.user.branch._id || req.user.branch) : null;
+            if (!userBranch || !task.branch || task.branch.toString() !== userBranch) {
                 res.status(403);
                 throw new Error('Not authorized to delete this task from another branch');
             }
