@@ -474,20 +474,24 @@ const Reports = () => {
                                     <div className="text-sm font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
                                         {book.soldCount || 0} шт
                                     </div>
+                                    <p className="text-[11px] font-bold text-slate-400 mt-1">
+                                        {(book.revenue || 0).toLocaleString()} сом
+                                    </p>
                                 </div>
                             </div>
                         )) : (
-                            <div className="text-center text-slate-500 mt-10">Нет проданных книг</div>
+                            <div className="text-center text-slate-500 mt-10">За этот период продаж не было</div>
                         )}
                     </div>
                 </div>
 
                 {/* Least Books List */}
                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
-                    <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
                         <ArrowDownRight className="text-rose-500" size={24} />
                         Топ 10 слабо продаваемых
                     </h3>
+                    <p className="text-xs font-medium text-slate-400 mb-5">Товары на складе, которые почти не продаются</p>
 
                     <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                         {leastBooks && leastBooks.length > 0 ? leastBooks.map((book: any, index: number) => (
@@ -507,6 +511,9 @@ const Reports = () => {
                                     <div className="text-sm font-black text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">
                                         {book.soldCount || 0} шт
                                     </div>
+                                    <p className="text-[11px] font-bold text-slate-400 mt-1">
+                                        на складе: {book.countInStock ?? 0}
+                                    </p>
                                 </div>
                             </div>
                         )) : (

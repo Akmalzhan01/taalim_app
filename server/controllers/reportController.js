@@ -151,7 +151,13 @@ const getTopBooks = asyncHandler(async (req, res) => {
         branchFilter = { branch: req.query.branch };
     }
 
-    let matchCondition = { isPaid: true, ...branchFilter };
+    // Refunded and cancelled orders are not sales
+    let matchCondition = {
+        isPaid: true,
+        isRefunded: { $ne: true },
+        isCancelled: { $ne: true },
+        ...branchFilter
+    };
 
     if (req.query.startDate && req.query.endDate) {
         const endDate = new Date(req.query.endDate);
@@ -164,32 +170,51 @@ const getTopBooks = asyncHandler(async (req, res) => {
     const soldData = await Order.aggregate([
         { $match: matchCondition },
         { $unwind: "$items" },
-        { $group: { _id: "$items.product", soldCount: { $sum: "$items.qty" } } }
+        {
+            $group: {
+                _id: "$items.product",
+                soldCount: { $sum: "$items.qty" },
+                revenue: { $sum: { $multiply: ["$items.qty", "$items.price"] } }
+            }
+        }
     ]);
 
     const soldMap = {};
     soldData.forEach(item => {
-        soldMap[item._id.toString()] = item.soldCount;
+        if (item._id) soldMap[item._id.toString()] = item;
     });
 
-    // Get all books to calculate who sold the most and least (including 0 sales)
-    const allBooksQuery = await Book.find().select('title author image price');
-    let allBooks = allBooksQuery.map(book => ({
-        _id: book._id,
-        title: book.title,
-        author: book.author || 'Неизвестный автор',
-        image: book.image,
-        price: book.price,
-        soldCount: soldMap[book._id.toString()] || 0
-    }));
+    // Only books of the selected branch, and only ones still offered for sale
+    const catalogue = await Book.find({ ...branchFilter, isVisible: { $ne: false } })
+        .select('title author image price countInStock');
 
-    // Sort descending for top books
-    allBooks.sort((a, b) => b.soldCount - a.soldCount);
-    topBooks = allBooks.slice(0, 10);
+    const books = catalogue.map(book => {
+        const sales = soldMap[book._id.toString()];
+        return {
+            _id: book._id,
+            title: book.title,
+            author: book.author || 'Неизвестный автор',
+            image: book.image,
+            price: book.price,
+            countInStock: book.countInStock,
+            soldCount: sales ? sales.soldCount : 0,
+            revenue: sales ? sales.revenue : 0
+        };
+    });
 
-    // Sort ascending for least selling books
-    allBooks.sort((a, b) => a.soldCount - b.soldCount);
-    leastBooks = allBooks.slice(0, 10);
+    // Best sellers: books that actually sold, most first. A book with no sales
+    // does not belong in a top-sellers list, so the list can be shorter than 10.
+    topBooks = books
+        .filter(book => book.soldCount > 0)
+        .sort((a, b) => b.soldCount - a.soldCount || b.revenue - a.revenue)
+        .slice(0, 10);
+
+    // Weak sellers: stock sitting on the shelf that is not moving. Among books
+    // with equal (often zero) sales, the ones tying up the most stock matter most.
+    const onShelf = books.filter(book => book.countInStock > 0);
+    leastBooks = (onShelf.length > 0 ? onShelf : books)
+        .sort((a, b) => a.soldCount - b.soldCount || b.countInStock - a.countInStock)
+        .slice(0, 10);
 
     return res.json({ topBooks, leastBooks });
 });
