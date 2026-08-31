@@ -171,7 +171,8 @@ const Books = () => {
             genres: formData.genres,
             image: formData.image,
             summary: formData.summary,
-            soldCount: Number(formData.soldCount),
+            // Sales drive this counter; only seed it when the book is created
+            ...(isEditMode ? {} : { soldCount: Number(formData.soldCount) }),
             isNew: formData.isNew,
             isVisible: formData.isVisible,
             size: formData.size,
@@ -422,7 +423,8 @@ const Books = () => {
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide ml-1">Продано (шт)</label>
-                                        <input type="number" name="soldCount" value={formData.soldCount} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all font-medium text-slate-800 placeholder:text-slate-400 text-sm" placeholder="0" />
+                                        <input type="number" name="soldCount" value={formData.soldCount} onChange={handleInputChange} readOnly={isEditMode} title={isEditMode ? 'Считается автоматически по заказам' : undefined} className={`w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all font-medium placeholder:text-slate-400 text-sm ${isEditMode ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-slate-50 text-slate-800'}`} placeholder="0" />
+                                        {isEditMode && <p className="text-[11px] text-slate-400 font-medium ml-1">Обновляется автоматически при заказах</p>}
                                     </div>
                                 </div>
 

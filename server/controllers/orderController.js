@@ -103,11 +103,15 @@ const addOrderItems = asyncHandler(async (req, res) => {
             const book = await Book.findById(item.product);
             if (book) {
                 if (book.isBundle && book.bundleItems && book.bundleItems.length > 0) {
+                    book.soldCount = (book.soldCount || 0) + item.qty;
+                    await book.save();
+
                     for (const bItem of book.bundleItems) {
                         const subBook = await Book.findById(bItem.product);
                         if (subBook) {
                             subBook.countInStock = subBook.countInStock - (bItem.qty * item.qty);
                             if (subBook.countInStock < 0) subBook.countInStock = 0;
+                            subBook.soldCount = (subBook.soldCount || 0) + (bItem.qty * item.qty);
                             await subBook.save();
                             if (subBook.countInStock <= subBook.minStockLimit) {
                                 lowStockBooks.push(`${subBook.title} (Осталось: ${subBook.countInStock})`);
@@ -117,6 +121,7 @@ const addOrderItems = asyncHandler(async (req, res) => {
                 } else {
                     book.countInStock = book.countInStock - item.qty;
                     if (book.countInStock < 0) book.countInStock = 0;
+                    book.soldCount = (book.soldCount || 0) + item.qty;
                     await book.save();
 
                     if (book.countInStock <= book.minStockLimit) {
@@ -233,11 +238,15 @@ const addOrderAdmin = asyncHandler(async (req, res) => {
         const book = await Book.findById(item.product);
         if (book) {
             if (book.isBundle && book.bundleItems && book.bundleItems.length > 0) {
+                book.soldCount = (book.soldCount || 0) + item.qty;
+                await book.save();
+
                 for (const bItem of book.bundleItems) {
                     const subBook = await Book.findById(bItem.product);
                     if (subBook) {
                         subBook.countInStock = subBook.countInStock - (bItem.qty * item.qty);
                         if (subBook.countInStock < 0) subBook.countInStock = 0;
+                        subBook.soldCount = (subBook.soldCount || 0) + (bItem.qty * item.qty);
                         await subBook.save();
                         if (subBook.countInStock <= subBook.minStockLimit) {
                             lowStockBooks.push(`${subBook.title} (Осталось: ${subBook.countInStock})`);
@@ -247,6 +256,7 @@ const addOrderAdmin = asyncHandler(async (req, res) => {
             } else {
                 book.countInStock = book.countInStock - item.qty;
                 if (book.countInStock < 0) book.countInStock = 0;
+                book.soldCount = (book.soldCount || 0) + item.qty;
                 await book.save();
 
                 if (book.countInStock <= book.minStockLimit) {
@@ -544,7 +554,19 @@ const refundOrder = asyncHandler(async (req, res) => {
             const book = await Book.findById(item.product);
             if (book) {
                 book.countInStock += item.qty;
+                book.soldCount = Math.max(0, (book.soldCount || 0) - item.qty);
                 await book.save();
+
+                // Bundles sell their contents, so give those back to the counter too
+                if (book.isBundle && book.bundleItems && book.bundleItems.length > 0) {
+                    for (const bItem of book.bundleItems) {
+                        const subBook = await Book.findById(bItem.product);
+                        if (subBook) {
+                            subBook.soldCount = Math.max(0, (subBook.soldCount || 0) - (bItem.qty * item.qty));
+                            await subBook.save();
+                        }
+                    }
+                }
             }
         }
 
