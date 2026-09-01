@@ -248,7 +248,8 @@ const updateBook = async (req, res) => {
         book.barcode = barcode || book.barcode;
         book.countInStock = countInStock !== undefined ? countInStock : book.countInStock;
         book.minStockLimit = req.body.minStockLimit || book.minStockLimit;
-        book.costPrice = req.body.costPrice || book.costPrice;
+        // Sent explicitly, so 0 has to be accepted as "clear the cost price"
+        book.costPrice = req.body.costPrice !== undefined ? req.body.costPrice : book.costPrice;
         book.cashbackAmount = req.body.cashbackAmount || book.cashbackAmount;
 
         // If user is superadmin/admin and branch is provided in request body, update it

@@ -33,6 +33,8 @@ const bookSchema = mongoose.Schema({
         }
     ],
     countInStock: { type: Number, required: true, default: 0 }, // Total across all branches
+    minStockLimit: { type: Number, default: 5 },
+    costPrice: { type: Number, default: 0 }, // Latest purchase price, kept in step with supplies
     cashbackAmount: { type: Number, default: 0 },
     isVisible: { type: Boolean, default: true },
     isBundle: { type: Boolean, default: false },

@@ -84,6 +84,10 @@ const addSupply = asyncHandler(async (req, res) => {
             if (book) {
                 // 1. Update general stock (cache)
                 book.countInStock += item.qty;
+                // Keep the book's cost price in step with what was actually paid
+                if (item.purchasePrice > 0) {
+                    book.costPrice = item.purchasePrice;
+                }
                 await book.save();
 
                 // 2. Create FIFO Batch
@@ -263,6 +267,10 @@ const updateSupply = asyncHandler(async (req, res) => {
         const book = await Book.findById(newItem.product);
         if (book) {
             book.countInStock += newItem.qty;
+            // Keep the book's cost price in step with what was actually paid
+            if (newItem.purchasePrice > 0) {
+                book.costPrice = newItem.purchasePrice;
+            }
             await book.save();
 
             await new SupplyBatch({

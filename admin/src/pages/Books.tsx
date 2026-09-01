@@ -38,6 +38,7 @@ const Books = () => {
         ageLimit: '',
         barcode: '',
         cashbackAmount: '',
+        costPrice: '',
         isBundle: false,
         bundleItems: [] as { product: string, qty: number, title: string }[],
         isVisible: true,
@@ -140,6 +141,7 @@ const Books = () => {
             ageLimit: '',
             barcode: '',
             cashbackAmount: '',
+            costPrice: '',
             isBundle: false,
             bundleItems: [],
             isVisible: true,
@@ -167,6 +169,7 @@ const Books = () => {
                 ageLimit: book.ageLimit || '',
                 barcode: book.barcode || '',
                 cashbackAmount: book.cashbackAmount?.toString() || '',
+                costPrice: book.costPrice?.toString() || '',
                 isBundle: book.isBundle || false,
                 isVisible: book.isVisible !== false,
                 bundleItems: book.bundleItems?.map((bi: any) => ({
@@ -219,6 +222,7 @@ const Books = () => {
             ageLimit: formData.ageLimit,
             barcode: formData.barcode,
             cashbackAmount: Number(formData.cashbackAmount),
+            costPrice: Number(formData.costPrice) || 0,
             isBundle: formData.isBundle,
             bundleItems: formData.isBundle ? formData.bundleItems.map(item => ({
                 product: item.product,
@@ -290,7 +294,7 @@ const Books = () => {
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Склад</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Продано</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                                    Price / Cashback
+                                    Цена / Закуп
                                 </th>
                                 <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Действия</th>
                             </tr>
@@ -361,6 +365,14 @@ const Books = () => {
                                         <div className="flex flex-col gap-1">
                                             <div className="text-sm font-bold text-slate-900 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100 w-fit">
                                                 {book.price} сом
+                                            </div>
+                                            <div className="text-xs font-semibold text-slate-500 w-fit">
+                                                Закуп: {book.costPrice ? `${book.costPrice.toLocaleString()} сом` : '—'}
+                                                {book.costPrice > 0 && book.price > 0 && (
+                                                    <span className="ml-1.5 text-emerald-600">
+                                                        +{(book.price - book.costPrice).toLocaleString()}
+                                                    </span>
+                                                )}
                                             </div>
                                             {book.cashbackAmount > 0 && (
                                                 <div className="text-xs font-medium text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded w-fit">
@@ -457,8 +469,17 @@ const Books = () => {
 
                                 <div className="grid grid-cols-2 gap-5">
                                     <div className="space-y-1.5">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide ml-1">Цена ($)</label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide ml-1">Цена продажи</label>
                                         <input type="number" name="price" value={formData.price} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all font-medium text-slate-800 placeholder:text-slate-400 text-sm" placeholder="0.00" required />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide ml-1">Цена закупа</label>
+                                        <input type="number" name="costPrice" value={formData.costPrice} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all font-medium text-slate-800 placeholder:text-slate-400 text-sm" placeholder="0" />
+                                        <p className="text-[11px] font-medium text-slate-400 ml-1">
+                                            {Number(formData.price) > 0 && Number(formData.costPrice) > 0
+                                                ? `Прибыль: ${(Number(formData.price) - Number(formData.costPrice)).toLocaleString()} сом (${Math.round((1 - Number(formData.costPrice) / Number(formData.price)) * 100)}%)`
+                                                : 'Обновляется при поставке'}
+                                        </p>
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide ml-1">Продано (шт)</label>
